@@ -1,0 +1,727 @@
+```javascript
+// ========================================
+// KIR RECREATION TOURNAMENT 2026
+// めちゃむずキーボード早打ち駅伝
+// ========================================
+
+
+// ========================================
+// GAME DATA
+// ========================================
+
+let questions = [];
+
+let currentSection = 1;
+let currentQuestionIndex = 0;
+
+let sectionQuestions = [];
+
+let score = 0;
+let miss = 0;
+let combo = 0;
+
+let startTime = 0;
+let timerInterval = null;
+
+let gameStarted = false;
+
+
+// ========================================
+// DOM
+// ========================================
+
+const sectionNumber =
+    document.getElementById("section-number");
+
+const questionNumber =
+    document.getElementById("question-number");
+
+const questionText =
+    document.getElementById("question-text");
+
+const typingInput =
+    document.getElementById("typing-input");
+
+const timerDisplay =
+    document.getElementById("timer");
+
+const scoreDisplay =
+    document.getElementById("score");
+
+const missDisplay =
+    document.getElementById("miss");
+
+const comboDisplay =
+    document.getElementById("combo");
+
+const progressCurrent =
+    document.getElementById("progress-current");
+
+const progressTotal =
+    document.getElementById("progress-total");
+
+const progressFill =
+    document.getElementById("progress-fill");
+
+const countdownOverlay =
+    document.getElementById("countdown-overlay");
+
+const countdown =
+    document.getElementById("countdown");
+
+const resultOverlay =
+    document.getElementById("result-overlay");
+
+const resultTime =
+    document.getElementById("result-time");
+
+const resultScore =
+    document.getElementById("result-score");
+
+const nextSectionButton =
+    document.getElementById("next-section-button");
+
+
+// ========================================
+// CSV LOAD
+// ========================================
+
+async function loadQuestions() {
+
+    try {
+
+        const response =
+            await fetch("data/questions.csv");
+
+        if (!response.ok) {
+            throw new Error(
+                "questions.csv を読み込めませんでした"
+            );
+        }
+
+        const csvText =
+            await response.text();
+
+        questions =
+            parseCSV(csvText);
+
+        console.log(
+            "CSV読み込み完了:",
+            questions
+        );
+
+        prepareSection();
+
+    } catch (error) {
+
+        console.error(error);
+
+        questionText.textContent =
+            "問題データの読み込みに失敗しました。";
+
+    }
+}
+
+
+// ========================================
+// CSV PARSER
+// ========================================
+
+function parseCSV(csvText) {
+
+    const lines =
+        csvText
+            .trim()
+            .split(/\r?\n/);
+
+    if (lines.length < 2) {
+        return [];
+    }
+
+    const headers =
+        parseCSVLine(lines[0]);
+
+    return lines
+        .slice(1)
+        .map(line => {
+
+            const values =
+                parseCSVLine(line);
+
+            const question = {};
+
+            headers.forEach(
+                (header, index) => {
+
+                    question[header] =
+                        values[index] ?? "";
+
+                }
+            );
+
+            return question;
+
+        });
+}
+
+
+// ========================================
+// CSV LINE PARSER
+// ========================================
+
+function parseCSVLine(line) {
+
+    const result = [];
+
+    let current = "";
+    let insideQuotes = false;
+
+    for (
+        let i = 0;
+        i < line.length;
+        i++
+    ) {
+
+        const char = line[i];
+
+        if (char === '"') {
+
+            if (
+                insideQuotes &&
+                line[i + 1] === '"'
+            ) {
+
+                current += '"';
+                i++;
+
+            } else {
+
+                insideQuotes =
+                    !insideQuotes;
+
+            }
+
+        } else if (
+            char === "," &&
+            !insideQuotes
+        ) {
+
+            result.push(current);
+            current = "";
+
+        } else {
+
+            current += char;
+
+        }
+    }
+
+    result.push(current);
+
+    return result;
+}
+
+
+// ========================================
+// SECTION PREPARATION
+// ========================================
+
+function prepareSection() {
+
+    sectionQuestions =
+        questions.filter(question => {
+
+            return Number(question.section)
+                === currentSection;
+
+        });
+
+    currentQuestionIndex = 0;
+
+    sectionNumber.textContent =
+        currentSection;
+
+    progressTotal.textContent =
+        sectionQuestions.length;
+
+    progressCurrent.textContent = 0;
+
+    progressFill.style.width = "0%";
+
+    showQuestion();
+
+    startCountdown();
+}
+
+
+// ========================================
+// SHOW QUESTION
+// ========================================
+
+function showQuestion() {
+
+    if (
+        currentQuestionIndex >=
+        sectionQuestions.length
+    ) {
+
+        finishSection();
+        return;
+    }
+
+    const question =
+        sectionQuestions[
+            currentQuestionIndex
+        ];
+
+    questionNumber.textContent =
+        `QUESTION ${currentQuestionIndex + 1}`;
+
+    questionText.textContent =
+        question.text;
+
+    typingInput.value = "";
+
+    updateProgress();
+
+}
+
+
+// ========================================
+// COUNTDOWN
+// 3 → 2 → 1 → GO!
+// ========================================
+
+function startCountdown() {
+
+    gameStarted = false;
+
+    typingInput.disabled = true;
+
+    countdownOverlay.style.display = "flex";
+
+    const count = [
+        "3",
+        "2",
+        "1",
+        "GO!"
+    ];
+
+    let index = 0;
+
+    countdown.textContent =
+        count[index];
+
+    countdown.classList.remove(
+        "countdown-pop"
+    );
+
+    void countdown.offsetWidth;
+
+    countdown.classList.add(
+        "countdown-pop"
+    );
+
+
+    const interval =
+        setInterval(() => {
+
+            index++;
+
+            if (index >= count.length) {
+
+                clearInterval(interval);
+
+                setTimeout(() => {
+
+                    countdownOverlay.style.display =
+                        "none";
+
+                    startGame();
+
+                }, 400);
+
+                return;
+            }
+
+            countdown.textContent =
+                count[index];
+
+            countdown.classList.remove(
+                "countdown-pop"
+            );
+
+            void countdown.offsetWidth;
+
+            countdown.classList.add(
+                "countdown-pop"
+            );
+
+        }, 1000);
+}
+
+
+// ========================================
+// START GAME
+// ========================================
+
+function startGame() {
+
+    gameStarted = true;
+
+    startTime =
+        performance.now();
+
+    startTimer();
+
+    typingInput.disabled = false;
+
+    typingInput.focus();
+
+}
+
+
+// ========================================
+// TIMER
+// ========================================
+
+function startTimer() {
+
+    clearInterval(timerInterval);
+
+    timerInterval =
+        setInterval(() => {
+
+            if (!gameStarted) {
+                return;
+            }
+
+            const elapsed =
+                performance.now() -
+                startTime;
+
+            timerDisplay.textContent =
+                formatTime(elapsed);
+
+        }, 10);
+}
+
+
+// ========================================
+// TIME FORMAT
+// ========================================
+
+function formatTime(milliseconds) {
+
+    const totalSeconds =
+        milliseconds / 1000;
+
+    const minutes =
+        Math.floor(
+            totalSeconds / 60
+        );
+
+    const seconds =
+        Math.floor(
+            totalSeconds % 60
+        );
+
+    const ms =
+        Math.floor(
+            milliseconds % 1000
+        );
+
+    return (
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0") +
+        "." +
+        String(ms).padStart(3, "0")
+    );
+}
+
+
+// ========================================
+// TYPING CHECK
+// ========================================
+
+typingInput.addEventListener(
+    "input",
+    () => {
+
+        if (!gameStarted) {
+            return;
+        }
+
+        const question =
+            sectionQuestions[
+                currentQuestionIndex
+            ];
+
+        const answer =
+            question.answer;
+
+        const input =
+            typingInput.value;
+
+
+        // ----------------------------
+        // ミス判定
+        // ----------------------------
+
+        if (
+            !answer.startsWith(input)
+        ) {
+
+            miss++;
+
+            combo = 0;
+
+            updateScore();
+
+            showEffect("miss");
+
+            // 入力を正しい部分だけ残す
+            typingInput.value =
+                input.slice(
+                    0,
+                    input.length - 1
+                );
+
+            return;
+        }
+
+
+        // ----------------------------
+        // 正解
+        // ----------------------------
+
+        if (input === answer) {
+
+            score += 100;
+
+            combo++;
+
+            updateScore();
+
+            showEffect("good");
+
+            moveRunner();
+
+            setTimeout(() => {
+
+                currentQuestionIndex++;
+
+                if (
+                    currentQuestionIndex >=
+                    sectionQuestions.length
+                ) {
+
+                    finishSection();
+
+                } else {
+
+                    showQuestion();
+
+                }
+
+            }, 150);
+
+        }
+
+    }
+);
+
+
+// ========================================
+// SCORE UPDATE
+// ========================================
+
+function updateScore() {
+
+    scoreDisplay.textContent =
+        score;
+
+    missDisplay.textContent =
+        miss;
+
+    comboDisplay.textContent =
+        combo;
+
+}
+
+
+// ========================================
+// PROGRESS
+// ========================================
+
+function updateProgress() {
+
+    const current =
+        currentQuestionIndex;
+
+    const total =
+        sectionQuestions.length;
+
+    progressCurrent.textContent =
+        current;
+
+    if (total === 0) {
+
+        progressFill.style.width =
+            "0%";
+
+        return;
+    }
+
+    const percent =
+        (current / total) * 100;
+
+    progressFill.style.width =
+        `${percent}%`;
+
+}
+
+
+// ========================================
+// RUNNER MOVE
+// ========================================
+
+function moveRunner() {
+
+    const runner =
+        document.getElementById(
+            "runner"
+        );
+
+    const total =
+        sectionQuestions.length;
+
+    if (total === 0) {
+        return;
+    }
+
+    const percent =
+        (
+            (currentQuestionIndex + 1)
+            / total
+        ) * 100;
+
+    runner.style.left =
+        `calc(${percent}% - 45px)`;
+
+}
+
+
+// ========================================
+// EFFECT
+// ========================================
+
+function showEffect(type) {
+
+    let effect;
+
+    if (type === "good") {
+
+        effect =
+            document.getElementById(
+                "good-effect"
+            );
+
+    } else if (type === "miss") {
+
+        effect =
+            document.getElementById(
+                "miss-effect"
+            );
+
+    } else {
+
+        effect =
+            document.getElementById(
+                "boost-effect"
+            );
+
+    }
+
+    if (!effect) {
+        return;
+    }
+
+    effect.classList.remove(
+        "effect-show"
+    );
+
+    void effect.offsetWidth;
+
+    effect.classList.add(
+        "effect-show"
+    );
+
+}
+
+
+// ========================================
+// SECTION FINISH
+// ========================================
+
+function finishSection() {
+
+    gameStarted = false;
+
+    clearInterval(timerInterval);
+
+    typingInput.disabled = true;
+
+    const elapsed =
+        performance.now() -
+        startTime;
+
+    resultTime.textContent =
+        formatTime(elapsed);
+
+    resultScore.textContent =
+        score;
+
+    resultOverlay.style.display =
+        "flex";
+
+}
+
+
+// ========================================
+// NEXT SECTION
+// ========================================
+
+nextSectionButton.addEventListener(
+    "click",
+    () => {
+
+        resultOverlay.style.display =
+            "none";
+
+        currentSection++;
+
+        prepareSection();
+
+    }
+);
+
+
+// ========================================
+// INITIALIZE
+// ========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        console.log(
+            "KIR Typing Game START"
+        );
+
+        loadQuestions();
+
+    }
+);
+```

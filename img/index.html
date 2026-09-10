@@ -1,0 +1,240 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KIR RECREATION TOURNAMENT 2026</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <main class="game">
+
+        <!-- ==============================
+             HEADER
+        ============================== -->
+        <header class="game-header">
+
+            <div class="title-area">
+                <h1>KIR RECREATION TOURNAMENT 2026</h1>
+                <p>めちゃむずキーボード早打ち駅伝</p>
+            </div>
+
+            <div class="section-info">
+                <span class="section-label">SECTION</span>
+                <span id="section-number">1</span>
+            </div>
+
+        </header>
+
+
+        <!-- ==============================
+             STATUS
+        ============================== -->
+        <section class="status-bar">
+
+            <div class="team-info">
+                <span class="team-label">TEAM</span>
+                <span id="team-name">A</span>
+            </div>
+
+            <div class="timer-area">
+                <span class="timer-label">TIME</span>
+                <span id="timer">00:00.00</span>
+            </div>
+
+        </section>
+
+
+        <!-- ==============================
+             RACE AREA
+        ============================== -->
+        <section class="race-area">
+
+            <div class="track">
+
+                <!-- ランナー -->
+                <img
+                    id="runner"
+                    class="runner"
+                    src="img/character/Ateam.png"
+                    alt="Team A Runner"
+                >
+
+                <!-- ゴール -->
+                <img
+                    class="finish-flag"
+                    src="img/etc/finish_flag.png"
+                    alt="Finish"
+                >
+
+            </div>
+
+            <!-- 進捗 -->
+            <div class="progress-area">
+
+                <div class="progress-bar">
+                    <div
+                        id="progress-fill"
+                        class="progress-fill">
+                    </div>
+                </div>
+
+                <div class="progress-text">
+                    <span id="progress-current">0</span>
+                    /
+                    <span id="progress-total">0</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==============================
+             QUESTION AREA
+        ============================== -->
+        <section class="question-area">
+
+            <div
+                id="question-number"
+                class="question-number">
+                QUESTION 1
+            </div>
+
+            <div
+                id="question-text"
+                class="question-text">
+                問題を読み込んでいます……
+            </div>
+
+            <div class="typing-guide">
+                ↓ TYPE HERE ↓
+            </div>
+
+            <input
+                id="typing-input"
+                class="typing-input"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                disabled
+            >
+
+        </section>
+
+
+        <!-- ==============================
+             SCORE
+        ============================== -->
+        <section class="score-area">
+
+            <div class="score-box">
+                <span class="score-label">SCORE</span>
+                <span id="score">0</span>
+            </div>
+
+            <div class="score-box">
+                <span class="score-label">MISS</span>
+                <span id="miss">0</span>
+            </div>
+
+            <div class="score-box">
+                <span class="score-label">COMBO</span>
+                <span id="combo">0</span>
+            </div>
+
+        </section>
+
+
+        <!-- ==============================
+             EFFECTS
+        ============================== -->
+        <div
+            id="good-effect"
+            class="effect good-effect">
+            GOOD!
+        </div>
+
+        <div
+            id="miss-effect"
+            class="effect miss-effect">
+            MISS!
+        </div>
+
+        <div
+            id="boost-effect"
+            class="effect boost-effect">
+            BOOST!!
+        </div>
+
+
+        <!-- ==============================
+             COUNTDOWN
+        ============================== -->
+        <div
+            id="countdown-overlay"
+            class="countdown-overlay">
+
+            <div
+                id="countdown"
+                class="countdown">
+                3
+            </div>
+
+        </div>
+
+
+        <!-- ==============================
+             RESULT
+        ============================== -->
+        <div
+            id="result-overlay"
+            class="result-overlay">
+
+            <div class="result-panel">
+
+                <div class="result-title">
+                    SECTION FINISH!
+                </div>
+
+                <div class="result-time-label">
+                    TIME
+                </div>
+
+                <div
+                    id="result-time"
+                    class="result-time">
+                    00:00.00
+                </div>
+
+                <div class="result-score">
+                    SCORE
+                    <span id="result-score">0</span>
+                </div>
+
+                <button
+                    id="next-section-button"
+                    class="next-button">
+                    NEXT SECTION
+                </button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- JavaScript -->
+    <script src="js/game.js"></script>
+
+</body>
+
+</html>
+```
