@@ -1048,3 +1048,19 @@ function hideAllOverlays() {
     DOM.resultOverlay.classList.add("hidden");
     DOM.finalOverlay.classList.add("hidden");
 }
+/* =========================================================
+   UPDATE KEYBOARD HIGHLIGHT
+========================================================= */
+
+function updateKeyboardHighlight() {
+    const nextChar = state.currentAnswer[state.currentPosition] || "";
+
+    DOM.keys.forEach(key => {
+        key.classList.remove("active");
+
+        // dataset.key が次に押すべきキーと一致したらハイライト
+        if (key.dataset.key === nextChar) {
+            key.classList.add("active");
+        }
+    });
+}
