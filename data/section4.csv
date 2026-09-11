@@ -1,8 +1,8 @@
 question_no,section,title,display,answer
-1,4,プログラミングタイピング①,,const[半角スペース]vision[半角スペース]=[半角スペース]""Keep[半角スペース]it[半角スペース]real"";"
-2,4,プログラミングタイピング①,,function[半角スペース]greet(name)[半角スペース]{[半角スペース]return[半角スペース]`Hello,[半角スペース]${name}!`;[半角スペース]}
-3,4,プログラミングタイピング①,,const[半角スペース]skills[半角スペース]=[半角スペース]{[半角スペース]linux:[半角スペース]true,[半角スペース]cloud:[半角スペース]true,[半角スペース]network:[半角スペース]true,[半角スペース]ai:[半角スペース]true[半角スペース]};
-4,4,プログラミングタイピング①,,for[半角スペース](const[半角スペース][key,[半角スペース]value][半角スペース]of[半角スペース]Object.entries(skills))[半角スペース]{[半角スペース]console.log(`${key}:[半角スペース]${value}`);[半角スペース]}
-5,4,プログラミングタイピング①,,.kir-card[半角スペース]{[半角スペース]display:[半角スペース]grid;[半角スペース]gap:[半角スペース]16px;[半角スペース]padding:[半角スペース]24px;[半角スペース]border:[半角スペース]1px[半角スペース]solid[半角スペース]#ddd;[半角スペース]}
-6,4,プログラミングタイピング①,,git[半角スペース]checkout[半角スペース]-b[半角スペース]feature/kir-event[半角スペース]&&[半角スペース]git[半角スペース]add[半角スペース].[半角スペース]&&[半角スペース]git[半角スペース]commit[半角スペース]-m[半角スペース]""add[半角スペース]event[半角スペース]rule"";"
-7,4,プログラミングタイピング①,,curl[半角スペース]-X[半角スペース]GET[半角スペース]""https://example.com/api/members?team=kir""[半角スペース]-H[半角スペース]""Accept:[半角スペース]application/json"";"
+1,4,プログラミングタイピング①,"const vision = ""Keep it real"";","const[半角スペース]vision[半角スペース]=[半角スペース]""Keep[半角スペース]it[半角スペース]real"";"
+2,4,プログラミングタイピング①,"function greet(name) { return `Hello, ${name}!`; }","function[半角スペース]greet(name)[半角スペース]{[半角スペース]return[半角スペース]`Hello,[半角スペース]${name}!`;[半角スペース]}"
+3,4,プログラミングタイピング①,"const skills = { linux: true, cloud: true, network: true, ai: true };","const[半角スペース]skills[半角スペース]=[半角スペース]{[半角スペース]linux:[半角スペース]true,[半角スペース]cloud:[半角スペース]true,[半角スペース]network:[半角スペース]true,[半角スペース]ai:[半角スペース]true[半角スペース]};"
+4,4,プログラミングタイピング①,"for (const [key, value] of Object.entries(skills)) { console.log(`${key}: ${value}`); }","for[半角スペース](const[半角スペース][key,[半角スペース]value][半角スペース]of[半角スペース]Object.entries(skills))[半角スペース]{[半角スペース]console.log(`${key}:[半角スペース]${value}`);[半角スペース]}"
+5,4,プログラミングタイピング①,".kir-card { display: grid; gap: 16px; padding: 24px; border: 1px solid #ddd; }",".kir-card[半角スペース]{[半角スペース]display:[半角スペース]grid;[半角スペース]gap:[半角スペース]16px;[半角スペース]padding:[半角スペース]24px;[半角スペース]border:[半角スペース]1px[半角スペース]solid[半角スペース]#ddd;[半角スペース]};"
+6,4,プログラミングタイピング①,"git checkout -b feature/kir-event && git add . && git commit -m ""add event rule"";","git[半角スペース]checkout[半角スペース]-b[半角スペース]feature/kir-event[半角スペース]&&[半角スペース]git[半角スペース]add[半角スペース].[半角スペース]&&[半角スペース]git[半角スペース]commit[半角スペース]-m[半角スペース]""add[半角スペース]event[半角スペース]rule"";"
+7,4,プログラミングタイピング①,"curl -X GET ""https://example.com/api/members?team=kir"" -H ""Accept: application/json"";","curl[半角スペース]-X[半角スペース]GET[半角スペース]""https://example.com/api/members?team=kir""[半角スペース]-H[半角スペース]""Accept:[半角スペース]application/json"";"
