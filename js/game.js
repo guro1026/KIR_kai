@@ -247,6 +247,51 @@ function bindEvents() {
 
     window.addEventListener("blur", clearPressedKeys);
 }
+/* =========================================================
+   KEYBOARD INPUT
+========================================================= */
+
+function handleKeyDown(event) {
+    if (event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+    }
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+
+        if (state.finalFinished) {
+            location.reload();
+            return;
+        }
+
+        if (!state.gameStarted && !state.countdownRunning && !state.sectionFinished) {
+            startCountdown();
+            return;
+        }
+
+        if (state.sectionFinished) {
+            handleResultNext();
+            return;
+        }
+
+        return;
+    }
+
+    if (typeof event.key !== "string" || event.key.length !== 1) {
+        return;
+    }
+
+    if (!state.gameStarted ||
+        state.sectionFinished ||
+        state.processingAnswer ||
+        state.countdownRunning) {
+        return;
+    }
+
+    flashPressedKey(event.key);
+
+    checkCharacter(event.key);
+}
 
 /* =========================================================
    TEAM
