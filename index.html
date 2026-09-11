@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>KIR RECREATION TOURNAMENT 2026</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -17,34 +19,47 @@
     <header class="header">
 
         <div class="header-title">
-            <h1>KIR RECREATION TOURNAMENT 2026</h1>
-            <p>めちゃむずキーボード早打ち駅伝</p>
+            <div class="title-main">
+                KIR RECREATION TOURNAMENT 2026
+            </div>
+
+            <div class="title-sub">
+                めちゃむずキーボード早打ち駅伝
+            </div>
+        </div>
+
+        <div class="header-status">
+
+            <div class="status-box">
+                <span class="status-label">SECTION</span>
+                <span id="section-number" class="status-value">第1区</span>
+            </div>
+
+            <div class="status-box">
+                <span class="status-label">TEAM</span>
+                <span id="team-name" class="status-value">A</span>
+            </div>
+
+            <div class="status-box time-box">
+                <span class="status-label">TIME</span>
+                <span id="timer" class="status-value timer">00:00.000</span>
+            </div>
+
         </div>
 
     </header>
 
 
     <!-- =========================================
-         STATUS ROW
+         TEAM SELECT / STATUS
     ========================================== -->
-    <section class="status-row">
+    <section class="team-panel">
 
-        <div class="status-block section-status">
-            <span class="status-label">SECTION</span>
-            <strong>第<span id="section-number">1</span>区</strong>
+        <div class="panel-title">
+            TEAM
         </div>
 
-        <div class="status-block team-status">
-            <span class="status-label">TEAM</span>
-            <strong id="team-name">A</strong>
-        </div>
-
-        <div class="status-block timer-status">
-            <span class="status-label">TIME</span>
-            <strong id="timer">00:00.000</strong>
-        </div>
-
-        <div class="team-status-list">
+        <div class="team-list">
 
             <div class="team-item active" data-team="A">
                 <span class="team-letter">A</span>
@@ -76,7 +91,7 @@
 
 
     <!-- =========================================
-         RACE TRACK
+         RACE AREA
     ========================================== -->
     <section class="race-panel">
 
@@ -87,29 +102,65 @@
         <div class="race-track">
 
             <div class="track-line"></div>
-            <div class="track-glow"></div>
 
-            <img
-                id="runner"
-                class="runner"
-                src="img/character/Ateam.png"
-                alt="Team A"
-            >
+            <div class="runner-position" id="runner">
+                <img
+                    src="img/character/Ateam.png"
+                    alt="Team A"
+                    class="runner-image"
+                >
+            </div>
 
-            <div class="finish-zone">
-
-                <div class="finish-line"></div>
+            <div class="finish-position">
 
                 <img
                     id="finish-flag"
-                    class="finish-flag"
                     src="img/etc/finish_flag.png"
                     alt="FINISH"
+                    class="finish-image"
                 >
 
-                <span class="finish-text">FINISH</span>
-
             </div>
+
+        </div>
+
+        <div class="race-finish">
+            <span>FINISH</span>
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         PROGRESS
+    ========================================== -->
+    <section class="progress-panel">
+
+        <div class="progress-info">
+
+            <div class="progress-label">
+                PROGRESS
+            </div>
+
+            <div class="progress-number">
+                <span id="progress-current">0</span>
+                <span class="progress-slash">/</span>
+                <span id="progress-total">5</span>
+            </div>
+
+            <div class="progress-percent">
+                <span id="progress-percent">0%</span>
+            </div>
+
+        </div>
+
+        <div class="progress-bar">
+
+            <div
+                id="progress-fill"
+                class="progress-fill"
+                style="width: 0%;"
+            ></div>
 
         </div>
 
@@ -123,15 +174,13 @@
 
         <div class="question-header">
 
-            <div class="question-heading">
-                <span class="question-heading-jp">お題</span>
+            <div class="question-category">
+                お題
             </div>
 
-            <div
-                id="question-number"
-                class="question-number"
-            >
-                QUESTION 1
+            <div class="question-number">
+                QUESTION
+                <span id="question-number">1</span>
             </div>
 
         </div>
@@ -141,61 +190,49 @@
             id="question-text"
             class="question-text"
         >
-            問題を読み込んでいます……
+            がんばろう
         </div>
 
 
-        <div class="typing-layout">
+        <div class="typing-area">
 
-            <div class="typing-main">
+            <div class="typing-label">
+                ↓ TYPE HERE ↓
+            </div>
 
-                <div class="typing-guide">
-                    ↓ TYPE HERE ↓
-                </div>
+            <div class="typing-box">
 
-                <div class="typing-box">
+                <span class="typing-prompt">&gt;</span>
 
-                    <div class="typing-prefix">
-                        &gt;
-                    </div>
-
-                    <input
-                        id="typing-input"
-                        class="typing-input"
-                        type="text"
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="off"
-                        spellcheck="false"
-                        disabled
-                        aria-label="タイピング入力欄"
-                    >
-
-                </div>
-
-                <div
-                    id="romaji-progress"
-                    class="romaji-progress"
-                ></div>
+                <input
+                    type="text"
+                    id="typing-input"
+                    class="typing-input"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    inputmode="text"
+                >
 
             </div>
 
+        </div>
 
-            <aside class="typing-tips">
+    </section>
 
-                <div class="tips-title">
-                    TYPING TIPS
-                </div>
 
-                <div class="tips-line"></div>
+    <!-- =========================================
+         TYPING TIPS
+    ========================================== -->
+    <section class="tips-panel">
 
-                <div class="tips-content">
-                    <span>MISSを減らせ！</span>
-                    <span>正確な入力でBOOST！</span>
-                </div>
+        <div class="tips-title">
+            TYPING TIPS
+        </div>
 
-            </aside>
-
+        <div class="tips-content">
+            ミスを減らして正確に入力しよう！
         </div>
 
     </section>
@@ -207,55 +244,97 @@
     <section class="hud">
 
         <div class="hud-item">
-            <span class="hud-label">SCORE</span>
-            <strong id="score">0</strong>
-        </div>
 
-        <div class="hud-item">
-            <span class="hud-label">MISS</span>
-            <strong id="miss">0</strong>
-        </div>
-
-        <div class="hud-item">
-            <span class="hud-label">COMBO</span>
-            <strong id="combo">0</strong>
-        </div>
-
-        <div class="hud-item">
-            <span class="hud-label">ACCURACY</span>
-            <strong id="accuracy">100%</strong>
-        </div>
-
-        <div class="hud-item progress-hud">
-
-            <span class="hud-label">PROGRESS</span>
-
-            <div class="hud-progress-row">
-                <strong>
-                    <span id="progress-current">0</span>
-                    /
-                    <span id="progress-total">0</span>
-                </strong>
-
-                <span id="progress-percent">0%</span>
+            <div class="hud-label">
+                SCORE
             </div>
 
-            <div class="hud-progress-bar">
-                <div
-                    id="progress-fill"
-                    class="progress-fill"
-                ></div>
+            <div
+                id="score"
+                class="hud-value"
+            >
+                0
             </div>
 
         </div>
 
+
         <div class="hud-item">
 
-            <span class="hud-label">STATE</span>
+            <div class="hud-label">
+                MISS
+            </div>
 
-            <strong id="game-state">
+            <div
+                id="miss"
+                class="hud-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="hud-item">
+
+            <div class="hud-label">
+                COMBO
+            </div>
+
+            <div
+                id="combo"
+                class="hud-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="hud-item">
+
+            <div class="hud-label">
+                ACCURACY
+            </div>
+
+            <div
+                id="accuracy"
+                class="hud-value"
+            >
+                100%
+            </div>
+
+        </div>
+
+
+        <div class="hud-item">
+
+            <div class="hud-label">
+                PROGRESS
+            </div>
+
+            <div
+                id="progress-percent"
+                class="hud-value"
+            >
+                0%
+            </div>
+
+        </div>
+
+
+        <div class="hud-item state-item">
+
+            <div class="hud-label">
+                STATE
+            </div>
+
+            <div
+                id="game-state"
+                class="hud-value"
+            >
                 READY
-            </strong>
+            </div>
 
         </div>
 
@@ -269,7 +348,6 @@
     <div
         id="good-effect"
         class="effect good-effect"
-        aria-hidden="true"
     >
         GOOD!
     </div>
@@ -277,7 +355,6 @@
     <div
         id="miss-effect"
         class="effect miss-effect"
-        aria-hidden="true"
     >
         MISS!
     </div>
@@ -285,9 +362,8 @@
     <div
         id="boost-effect"
         class="effect boost-effect"
-        aria-hidden="true"
     >
-        BOOST!!
+        BOOST!
     </div>
 
 
@@ -297,15 +373,16 @@
 
     <div
         id="countdown-overlay"
-        class="countdown-overlay"
-        aria-hidden="true"
+        class="overlay countdown-overlay"
     >
+
         <div
             id="countdown"
             class="countdown"
         >
             3
         </div>
+
     </div>
 
 
@@ -315,27 +392,25 @@
 
     <div
         id="error-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay error-overlay"
     >
 
-        <div class="result-panel">
+        <div class="modal">
 
-            <div class="result-title">
-                GAME ERROR
+            <div class="modal-title">
+                ERROR
             </div>
 
             <div
                 id="error-message"
-                class="result-message"
+                class="modal-message"
             >
-                ゲームの読み込みに失敗しました。
+                エラーが発生しました。
             </div>
 
             <button
                 id="error-reload-button"
-                class="next-button"
-                type="button"
+                class="modal-button"
             >
                 RELOAD
             </button>
@@ -351,14 +426,17 @@
 
     <div
         id="result-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay result-overlay"
     >
 
-        <div class="result-panel">
+        <div class="result-modal">
 
             <div class="result-title">
-                SECTION FINISH!
+                SECTION CLEAR
+            </div>
+
+            <div class="result-subtitle">
+                区間賞
             </div>
 
             <div class="result-time-label">
@@ -372,20 +450,23 @@
                 00:00.000
             </div>
 
-            <div class="result-score">
-                SCORE
-                <span id="result-score">0</span>
-            </div>
+            <div class="result-stats">
 
-            <div class="result-miss">
-                MISS
-                <span id="result-miss">0</span>
+                <div>
+                    <span>SCORE</span>
+                    <strong id="result-score">0</strong>
+                </div>
+
+                <div>
+                    <span>MISS</span>
+                    <strong id="result-miss">0</strong>
+                </div>
+
             </div>
 
             <button
                 id="next-section-button"
-                class="next-button"
-                type="button"
+                class="modal-button next-button"
             >
                 NEXT SECTION
             </button>
@@ -401,17 +482,16 @@
 
     <div
         id="final-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay final-overlay"
     >
 
-        <div class="result-panel final-panel">
+        <div class="result-modal final-modal">
 
             <div class="result-title">
-                RACE FINISH!
+                FINISH!
             </div>
 
-            <div class="final-subtitle">
+            <div class="result-subtitle">
                 KIR RECREATION TOURNAMENT 2026
             </div>
 
@@ -426,20 +506,23 @@
                 00:00.000
             </div>
 
-            <div class="result-score">
-                TOTAL SCORE
-                <span id="final-score">0</span>
-            </div>
+            <div class="result-stats">
 
-            <div class="result-miss">
-                TOTAL MISS
-                <span id="final-miss">0</span>
+                <div>
+                    <span>SCORE</span>
+                    <strong id="final-score">0</strong>
+                </div>
+
+                <div>
+                    <span>MISS</span>
+                    <strong id="final-miss">0</strong>
+                </div>
+
             </div>
 
             <button
                 id="restart-button"
-                class="next-button"
-                type="button"
+                class="modal-button"
             >
                 PLAY AGAIN
             </button>
@@ -448,7 +531,9 @@
 
     </div>
 
+
 </main>
+
 
 <script src="js/game.js"></script>
 
