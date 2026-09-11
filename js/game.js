@@ -201,42 +201,68 @@ async function loadAllSections() {
     questionText.textContent =
         "問題データを読み込んでいます……";
 
+
     for (
         let section = 1;
         section <= TOTAL_SECTIONS;
         section++
     ) {
 
-        const path = `data/section${section}.csv`;
+        const path =
+            `data/section${section}.csv`;
+
+
+        // --------------------------------------------
+        // 読み込み中表示
+        // --------------------------------------------
+
+        questionText.textContent =
+            `SECTION ${section} の問題データを読み込んでいます……`;
+
 
         let response;
 
+
         try {
 
-            response = await fetch(
-                path,
-                {
-                    cache: "no-store"
-                }
-            );
+            response =
+                await fetch(
+                    `${path}?v=${Date.now()}`,
+                    {
+                        cache: "no-store"
+                    }
+                );
 
         } catch (networkError) {
 
             throw new Error(
-                `${path} の読み込みに失敗しました。\n` +
-                `(ネットワークエラー: ${networkError.message})`
+                `${path} の読み込みに失敗しました。\n\n` +
+                `ネットワークエラー:\n` +
+                `${networkError.message}`
             );
         }
+
+
+        // --------------------------------------------
+        // HTTPエラー
+        // --------------------------------------------
 
         if (!response.ok) {
 
             throw new Error(
-                `${path} の読み込みに失敗しました。\n` +
+                `${path} の読み込みに失敗しました。\n\n` +
                 `HTTP Status: ${response.status}`
             );
         }
 
-        const csvText = await response.text();
+
+        // --------------------------------------------
+        // CSV取得
+        // --------------------------------------------
+
+        const csvText =
+            await response.text();
+
 
         if (!csvText.trim()) {
 
@@ -245,19 +271,69 @@ async function loadAllSections() {
             );
         }
 
-        const rows = parseCSV(csvText, path);
 
-        validateSectionQuestions(
-            rows,
-            section,
-            path
-        );
+        // --------------------------------------------
+        // CSV解析
+        // --------------------------------------------
 
-        sectionsData[section] = rows;
+        let rows;
+
+        try {
+
+            rows =
+                parseCSV(
+                    csvText,
+                    path
+                );
+
+        } catch (parseError) {
+
+            throw new Error(
+                `${path} のCSV解析に失敗しました。\n\n` +
+                `${parseError.message}`
+            );
+        }
+
+
+        // --------------------------------------------
+        // データ検証
+        // --------------------------------------------
+
+        try {
+
+            validateSectionQuestions(
+                rows,
+                section,
+                path
+            );
+
+        } catch (validationError) {
+
+            throw new Error(
+                `${path} の問題データが不正です。\n\n` +
+                `${validationError.message}`
+            );
+        }
+
+
+        sectionsData[section] =
+            rows;
     }
-}
 
-// ========================================
+
+    // --------------------------------------------
+    // 全区間読み込み完了
+    // --------------------------------------------
+
+    questionText.textContent =
+        "問題データの読み込み完了！";
+
+
+    console.log(
+        "全6区間の問題データ読み込み完了",
+        sectionsData
+    );
+}// ========================================
 // CSV PARSER
 // BOM / quoted field / comma / 改行 / ""
 // に対応
