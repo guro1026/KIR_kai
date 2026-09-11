@@ -1,7 +1,6 @@
 /* =========================================================
    KIR RECREATION TOURNAMENT 2026
-   MECHA-MUZUKASHI KEYBOARD HAYAUCHI EKIDEN
-   SCREEN UI
+   MECHA-MUZUKASHII KEYBOARD HAYAUCHI EKIDEN
    ========================================================= */
 
 
@@ -37,19 +36,16 @@ body {
 
 
 /* =========================================================
-   GAME SCREEN
+   GAME
    ========================================================= */
 
 .game {
     position: relative;
 
-    width: min(1270px, 100vw);
-    height: min(790px, 100vh);
+    width: min(1270px, calc(100vw - 24px));
+    height: 790px;
 
-    margin: auto;
-
-    top: 50%;
-    transform: translateY(-50%);
+    margin: 28px auto 0;
 
     padding: 10px 12px;
 
@@ -83,6 +79,8 @@ body {
     box-shadow:
         0 0 15px rgba(0, 191, 255, 0.45),
         inset 0 0 50px rgba(0, 80, 140, 0.12);
+
+    overflow: visible;
 }
 
 
@@ -115,7 +113,13 @@ body {
     z-index: 0;
 }
 
-.game > * {
+
+/* =========================================================
+   MAIN GAME ELEMENTS
+   ========================================================= */
+
+.game > header,
+.game > section {
     position: relative;
     z-index: 1;
 }
@@ -126,8 +130,6 @@ body {
    ========================================================= */
 
 .header {
-    position: relative;
-
     display: grid;
 
     grid-template-columns:
@@ -159,7 +161,7 @@ body {
 
 
 /* =========================================================
-   DIAGONAL CORNERS
+   HEADER CORNERS
    ========================================================= */
 
 .header::before,
@@ -596,14 +598,6 @@ body {
     border:
         1px solid #15527a;
 
-    clip-path:
-        polygon(
-            0 0,
-            100% 0,
-            100% 100%,
-            0 100%
-        );
-
     font-size: 8px;
 
     font-style: italic;
@@ -682,7 +676,7 @@ body {
 
 
 /* =========================================================
-   HIDDEN COMPATIBILITY
+   HIDDEN SECTION NUMBER
    ========================================================= */
 
 .section-number-hidden {
@@ -697,7 +691,11 @@ body {
 .race-panel {
     display: grid;
 
-    grid-template-columns: 80px 1fr;
+    grid-template-columns:
+        80px
+        1fr;
+
+    min-height: 0;
 
     background:
         linear-gradient(
@@ -754,6 +752,9 @@ body {
 
 .race-area {
     position: relative;
+
+    min-width: 0;
+    min-height: 0;
 
     overflow: hidden;
 }
@@ -826,7 +827,8 @@ body {
 
     height: 5px;
 
-    transform: translateY(-50%);
+    transform:
+        translateY(-50%);
 
     background:
         repeating-linear-gradient(
@@ -848,9 +850,8 @@ body {
 
     left: 4px;
 
-    top: 25%;
-
-    bottom: 25%;
+    top: 12px;
+    bottom: 12px;
 
     width: 3px;
 
@@ -914,7 +915,6 @@ body {
     right: 62px;
 
     top: 12px;
-
     bottom: 12px;
 
     width: 3px;
@@ -994,6 +994,8 @@ body {
 
     flex-direction: column;
 
+    min-height: 0;
+
     padding: 15px 18px;
 
     background:
@@ -1008,11 +1010,13 @@ body {
 
     box-shadow:
         inset 0 0 30px rgba(0, 90, 160, 0.08);
+
+    overflow: hidden;
 }
 
 
 /* =========================================================
-   CYAN CORNER
+   QUESTION CORNER
    ========================================================= */
 
 .question-panel::before {
@@ -1054,6 +1058,8 @@ body {
     align-items: center;
 
     height: 38px;
+
+    flex-shrink: 0;
 }
 
 .question-heading {
@@ -1112,6 +1118,8 @@ body {
 .question-text {
     flex: 1;
 
+    min-height: 0;
+
     display: flex;
 
     justify-content: center;
@@ -1119,7 +1127,6 @@ body {
     align-items: center;
 
     padding-left: 40px;
-
     padding-right: 190px;
 
     text-align: center;
@@ -1134,6 +1141,8 @@ body {
 
     text-shadow:
         0 0 12px rgba(255, 255, 255, 0.35);
+
+    overflow: hidden;
 }
 
 
@@ -1145,12 +1154,14 @@ body {
     display: grid;
 
     grid-template-columns:
-        1fr
+        minmax(0, 1fr)
         175px;
 
     gap: 20px;
 
     align-items: end;
+
+    flex-shrink: 0;
 }
 
 .typing-main {
@@ -1262,10 +1273,6 @@ body {
     pointer-events: none;
 
     user-select: none;
-}
-
-.typing-input:focus {
-    caret-color: transparent;
 }
 
 
@@ -1421,6 +1428,7 @@ body {
     gap: 7px;
 
     min-width: 0;
+    min-height: 0;
 }
 
 
@@ -1432,6 +1440,7 @@ body {
     position: relative;
 
     min-width: 0;
+    min-height: 0;
 
     padding: 10px 12px;
 
@@ -1601,7 +1610,7 @@ body {
 
 
 /* =========================================================
-   PROGRESS HUD
+   PROGRESS
    ========================================================= */
 
 .hud-progress {
@@ -1610,6 +1619,8 @@ body {
     flex-direction: column;
 
     justify-content: center;
+
+    min-width: 0;
 }
 
 .progress-hud-bar {
@@ -1652,6 +1663,8 @@ body {
 
     justify-content: space-between;
 
+    gap: 10px;
+
     margin-top: 6px;
 
     font-family:
@@ -1663,6 +1676,8 @@ body {
     font-weight: 900;
 
     color: #ffffff;
+
+    white-space: nowrap;
 }
 
 
@@ -1977,19 +1992,21 @@ body {
 
 
 /* =========================================================
-   HEIGHT ADJUSTMENT
+   RESPONSIVE HEIGHT
    ========================================================= */
 
-@media (max-height: 800px) {
+@media (max-height: 850px) {
 
     .game {
-        height: 96vh;
+        height: calc(100vh - 20px);
+
+        margin-top: 10px;
 
         grid-template-rows:
             62px
             72px
             130px
-            1fr
+            minmax(230px, 1fr)
             91px;
     }
 
@@ -2028,13 +2045,13 @@ body {
 
 
 /* =========================================================
-   WIDTH ADJUSTMENT
+   RESPONSIVE WIDTH
    ========================================================= */
 
 @media (max-width: 1100px) {
 
     .game {
-        width: 100vw;
+        width: calc(100vw - 20px);
     }
 
     .top-status {
@@ -2065,5 +2082,122 @@ body {
         padding-left: 30px;
 
         font-size: 14px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL SCREEN
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .game {
+        width: 100vw;
+
+        margin-top: 0;
+
+        padding:
+            6px;
+
+        grid-template-rows:
+            58px
+            68px
+            125px
+            minmax(220px, 1fr)
+            86px;
+
+        gap: 6px;
+    }
+
+    .header {
+        grid-template-columns:
+            190px
+            1fr
+            100px;
+
+        padding:
+            0 10px;
+    }
+
+    .brand-sub {
+        display: none;
+    }
+
+    .main-title {
+        font-size: 22px;
+    }
+
+    .header-catch {
+        font-size: 6px;
+    }
+
+    .top-status {
+        grid-template-columns:
+            120px
+            180px
+            210px
+            1fr;
+
+        gap: 5px;
+    }
+
+    .section-number {
+        font-size: 42px;
+    }
+
+    #team-name {
+        font-size: 27px;
+    }
+
+    .timer {
+        font-size: 25px;
+    }
+
+    .team-selector {
+        gap: 3px;
+    }
+
+    .team-card {
+        font-size: 7px;
+    }
+
+    .question-text {
+        padding:
+            0 20px;
+
+        font-size: 25px;
+    }
+
+    .typing-layout {
+        grid-template-columns:
+            minmax(0, 1fr)
+            145px;
+
+        gap: 10px;
+    }
+
+    .hud {
+        gap: 4px;
+    }
+
+    .hud-card {
+        padding:
+            8px;
+    }
+
+    .hud-value {
+        font-size: 24px;
+    }
+
+    .score-value {
+        font-size: 30px;
+    }
+
+    .score-circle {
+        width: 45px;
+        height: 45px;
+
+        border-width: 5px;
     }
 }
