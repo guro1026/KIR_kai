@@ -911,3 +911,140 @@ function sleep(ms) {
 // ここから下は、あなたの既存のエフェクト・結果表示・エラー表示・キーエフェクトの関数を
 // そのまま残しておけばOK。
 // （もしここも壊れていたら、その部分だけ貼ってくれれば、そこも修正版を書く）
+
+
+/* =========================================================
+   EFFECTS
+========================================================= */
+
+function showGoodEffect() {
+    DOM.goodEffect.classList.remove("hidden");
+    DOM.goodEffect.style.animation = "none";
+    void DOM.goodEffect.offsetWidth;
+    DOM.goodEffect.style.animation = "good-pop 0.3s ease-out";
+
+    setTimeout(() => {
+        DOM.goodEffect.classList.add("hidden");
+    }, 300);
+}
+
+function showMissEffect() {
+    DOM.missEffect.classList.remove("hidden");
+    DOM.missEffect.style.animation = "none";
+    void DOM.missEffect.offsetWidth;
+    DOM.missEffect.style.animation = "miss-pop 0.3s ease-out";
+
+    setTimeout(() => {
+        DOM.missEffect.classList.add("hidden");
+    }, 300);
+}
+
+function showBoostEffect() {
+    DOM.boostEffect.classList.remove("hidden");
+    DOM.boostEffect.style.animation = "none";
+    void DOM.boostEffect.offsetWidth;
+    DOM.boostEffect.style.animation = "boost-pop 0.5s ease-out";
+
+    setTimeout(() => {
+        DOM.boostEffect.classList.add("hidden");
+    }, 500);
+}
+
+/* =========================================================
+   KEYBOARD HIGHLIGHT
+========================================================= */
+
+function updateRequiredKey() {
+    const nextChar = state.currentAnswer[state.currentPosition] || "";
+
+    DOM.keys.forEach(key => {
+        key.classList.remove("active");
+        if (key.dataset.key === nextChar) {
+            key.classList.add("active");
+        }
+    });
+}
+
+function flashPressedKey(char) {
+    DOM.keys.forEach(key => {
+        if (key.dataset.key === char) {
+            key.classList.add("pressed");
+            setTimeout(() => key.classList.remove("pressed"), 150);
+        }
+    });
+}
+
+function clearPressedKeys() {
+    DOM.keys.forEach(key => key.classList.remove("pressed"));
+}
+
+/* =========================================================
+   SECTION FINISH
+========================================================= */
+
+function finishSection() {
+    stopTimer();
+
+    state.sectionFinished = true;
+    state.gameStarted = false;
+
+    const elapsed = performance.now() - state.sectionStartTime;
+
+    DOM.resultTime.textContent = formatTime(elapsed);
+    DOM.resultScore.textContent = String(state.score);
+    DOM.resultMiss.textContent = String(state.miss);
+
+    DOM.resultOverlay.classList.remove("hidden");
+}
+
+function handleResultNext() {
+    DOM.resultOverlay.classList.add("hidden");
+
+    state.totalScore += state.score;
+    state.totalMiss += state.miss;
+
+    const nextSection = state.currentSection + 1;
+
+    if (nextSection >= state.sectionsData.length) {
+        finishRace();
+        return;
+    }
+
+    prepareSection(nextSection);
+}
+
+/* =========================================================
+   FINAL RESULT
+========================================================= */
+
+function finishRace() {
+    stopTimer();
+
+    state.finalFinished = true;
+
+    DOM.finalTime.textContent = DOM.timer.textContent;
+    DOM.finalScore.textContent = String(state.totalScore);
+    DOM.finalMiss.textContent = String(state.totalMiss);
+
+    DOM.finalOverlay.classList.remove("hidden");
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+function showError(message) {
+    DOM.errorMessage.textContent = message;
+    DOM.errorOverlay.classList.remove("hidden");
+}
+
+/* =========================================================
+   OVERLAY CONTROL
+========================================================= */
+
+function hideAllOverlays() {
+    DOM.countdownOverlay.classList.add("hidden");
+    DOM.errorOverlay.classList.add("hidden");
+    DOM.resultOverlay.classList.add("hidden");
+    DOM.finalOverlay.classList.add("hidden");
+}
