@@ -16,30 +16,12 @@
 "use strict";
 
 /* =========================================================
-   ★★★ 追加：normalizeText() ★★★
-========================================================= */
-function normalizeText(text) {
-    if (!text) return "";
-    return text
-        .replace(/
-
-\[半角スペース\]
-
-/g, " ")
-        .replace(/
-
-\[全角スペース\]
-
-/g, "　");
-}
-
-/* =========================================================
    CONFIG
 ========================================================= */
 
 const GAME_ID = "KIR-KAI-2026";
 
-const VALID_TEAMS = ["A","B","C","D","E","F"];
+const VALID_TEAMS = ["A", "B", "C", "D", "E", "F"];
 
 const SECTION_FILES = [
     "data/section1.csv",
@@ -57,7 +39,10 @@ const NEXT_SECTION_DELAY = 500;
 /* =========================================================
    DOM HELPER
 ========================================================= */
-function $(id) { return document.getElementById(id); }
+
+function $(id) {
+    return document.getElementById(id);
+}
 
 /* =========================================================
    DOM
@@ -67,40 +52,51 @@ const DOM = {
     sectionNumber: $("section-number"),
     teamName: $("team-name"),
     timer: $("timer"),
+
     runner: $("runner"),
     runnerImage: $("runner-image"),
     finishFlag: $("finish-flag"),
+
     questionNumber: $("question-number"),
     questionText: $("question-text"),
     romajiProgress: $("romaji-progress"),
+
     score: $("score"),
     miss: $("miss"),
     combo: $("combo"),
     comboSideValue: $("combo-side-value"),
     accuracy: $("accuracy"),
+
     progressPercent: $("progress-percent"),
     progressFill: $("progress-fill"),
     progressCurrent: $("progress-current"),
     progressTotal: $("progress-total"),
+
     goodEffect: $("good-effect"),
     missEffect: $("miss-effect"),
     boostEffect: $("boost-effect"),
+
     countdownOverlay: $("countdown-overlay"),
     countdown: $("countdown"),
+
     errorOverlay: $("error-overlay"),
     errorMessage: $("error-message"),
     errorReloadButton: $("error-reload-button"),
+
     resultOverlay: $("result-overlay"),
     resultTime: $("result-time"),
     resultScore: $("result-score"),
     resultMiss: $("result-miss"),
     resultNextButton: $("result-next-button"),
+
     finalOverlay: $("final-overlay"),
     finalTime: $("final-time"),
     finalScore: $("final-score"),
     finalMiss: $("final-miss"),
     restartButton: $("restart-button"),
+
     typingInput: $("typing-input"),
+
     teamButtons: document.querySelectorAll(".team-select"),
     keys: document.querySelectorAll(".key")
 };
@@ -111,28 +107,51 @@ const DOM = {
 
 const state = {
     initialized: false,
+
     team: "A",
-    sectionsData: [],
-    currentSection: 0,
-    sectionQuestions: [],
-    currentQuestionIndex: 0,
+
+    sectionsData: [],          // [ [questionObj, ...], ... ]
+
+    currentSection: 0,         // index (0-based)
+
+    sectionQuestions: [],      // current section array
+
+    currentQuestionIndex: 0,   // index in sectionQuestions
+
     currentQuestion: null,
+
     currentAnswer: "",
+
     currentPosition: 0,
+
     score: 0,
+
     miss: 0,
+
     combo: 0,
+
     totalScore: 0,
+
     totalMiss: 0,
+
     sectionTotalChars: 0,
+
     sectionCharsTyped: 0,
+
     sectionStartTime: 0,
+
     sectionTimes: [],
+
     timerInterval: null,
+
     gameStarted: false,
+
     sectionFinished: false,
+
     processingAnswer: false,
+
     countdownRunning: false,
+
     finalFinished: false
 };
 
@@ -168,62 +187,197 @@ function checkDOM() {
         sectionNumber: DOM.sectionNumber,
         teamName: DOM.teamName,
         timer: DOM.timer,
+
         runner: DOM.runner,
         runnerImage: DOM.runnerImage,
+
         questionNumber: DOM.questionNumber,
         questionText: DOM.questionText,
         romajiProgress: DOM.romajiProgress,
+
         score: DOM.score,
         miss: DOM.miss,
         combo: DOM.combo,
         accuracy: DOM.accuracy,
+
         progressPercent: DOM.progressPercent,
         progressFill: DOM.progressFill,
         progressCurrent: DOM.progressCurrent,
         progressTotal: DOM.progressTotal,
+
         countdownOverlay: DOM.countdownOverlay,
         countdown: DOM.countdown,
+
         errorOverlay: DOM.errorOverlay,
         errorMessage: DOM.errorMessage,
         errorReloadButton: DOM.errorReloadButton,
+
         resultOverlay: DOM.resultOverlay,
         resultTime: DOM.resultTime,
         resultScore: DOM.resultScore,
         resultMiss: DOM.resultMiss,
         resultNextButton: DOM.resultNextButton,
+
         finalOverlay: DOM.finalOverlay,
         finalTime: DOM.finalTime,
         finalScore: DOM.finalScore,
         finalMiss: DOM.finalMiss,
         restartButton: DOM.restartButton,
+
         typingInput: DOM.typingInput
     };
 
     const missing = Object.entries(required)
-        .filter(([, el]) => !el)
+        .filter(([, element]) => !element)
         .map(([name]) => name);
 
     if (missing.length > 0) {
         throw new Error("HTMLに必要な要素がありません: " + missing.join(", "));
     }
 }
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+function bindEvents() {
+    document.addEventListener("keydown", handleKeyDown);
+
+    DOM.teamButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const team = button.dataset.team;
+            if (!VALID_TEAMS.includes(team)) return;
+
+            if (state.gameStarted || state.countdownRunning) return;
+
+            state.team = team;
+            applyTeam();
+            updateTeamButtons();
+            updateURLTeam(team);
+        });
+    });
+
+    DOM.resultNextButton.addEventListener("click", handleResultNext);
+
+    DOM.restartButton.addEventListener("click", () => {
+        location.reload();
+    });
+
+    DOM.errorReloadButton.addEventListener("click", () => {
+        location.reload();
+    });
+
+    window.addEventListener("blur", clearPressedKeys);
+}
+
+/* =========================================================
+   TEAM
+========================================================= */
+
+function readTeamFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const urlTeam = String(params.get("team") || "").toUpperCase();
+
+    if (VALID_TEAMS.includes(urlTeam)) {
+        state.team = urlTeam;
+    } else {
+        state.team = "A";
+    }
+}
+
+function updateURLTeam(team) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("team", team);
+    window.history.replaceState({}, "", url);
+}
+
+function applyTeam() {
+    const team = state.team;
+
+    DOM.teamName.textContent = `TEAM ${team}`;
+    DOM.runnerImage.src = `img/character/${team}team.png`;
+    DOM.runnerImage.alt = `Team ${team}`;
+
+    updateTeamButtons();
+}
+
+function updateTeamButtons() {
+    DOM.teamButtons.forEach(button => {
+        button.classList.toggle("active", button.dataset.team === state.team);
+    });
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetWholeGame() {
+    stopTimer();
+
+    state.sectionsData = [];
+    state.currentSection = 0;
+    state.sectionQuestions = [];
+    state.currentQuestionIndex = 0;
+    state.currentQuestion = null;
+    state.currentAnswer = "";
+    state.currentPosition = 0;
+    state.score = 0;
+    state.miss = 0;
+    state.combo = 0;
+    state.totalScore = 0;
+    state.totalMiss = 0;
+    state.sectionTotalChars = 0;
+    state.sectionCharsTyped = 0;
+    state.sectionStartTime = 0;
+    state.sectionTimes = [];
+    state.gameStarted = false;
+    state.sectionFinished = false;
+    state.processingAnswer = false;
+    state.countdownRunning = false;
+    state.finalFinished = false;
+
+    DOM.sectionNumber.textContent = "1";
+    DOM.timer.textContent = "00:00.000";
+    DOM.questionNumber.textContent = "1 / 1";
+    DOM.questionText.textContent = "LOADING...";
+    DOM.romajiProgress.textContent = "";
+
+    updateHUD();
+    updateProgress();
+    resetRunner();
+
+    hideAllOverlays();
+
+    document.body.classList.add("ready");
+}
+
+function resetSectionStats() {
+    state.score = 0;
+    state.miss = 0;
+    state.combo = 0;
+    state.sectionCharsTyped = 0;
+    state.sectionStartTime = 0;
+    state.sectionFinished = false;
+    state.processingAnswer = false;
+
+    updateHUD();
+    updateProgress();
+}
+
 /* =========================================================
    LOAD ALL CSV
 ========================================================= */
 
 async function loadAllSections() {
-
     DOM.questionText.textContent = "LOADING...";
 
     const loadedSections = [];
 
     try {
         for (let index = 0; index < SECTION_FILES.length; index++) {
-
             const file = SECTION_FILES[index];
 
             const response = await fetch(`${file}?v=${Date.now()}`);
-
             if (!response.ok) {
                 throw new Error(
                     `CSVを読み込めませんでした。\n${file}\nHTTP ${response.status}`
@@ -231,19 +385,11 @@ async function loadAllSections() {
             }
 
             const text = await response.text();
-
             const rows = parseCSV(text);
 
             validateCSV(rows, index + 1, file);
 
-            /* ★★★ 修正：display / answer を normalizeText ★★★ */
-            const normalizedRows = rows.map(r => ({
-                ...r,
-                display: normalizeText(r.display),
-                answer: normalizeText(r.answer)
-            }));
-
-            loadedSections.push(normalizedRows);
+            loadedSections.push(rows);
         }
 
         state.sectionsData = loadedSections;
@@ -265,11 +411,139 @@ async function loadAllSections() {
 }
 
 /* =========================================================
+   CSV PARSER
+========================================================= */
+
+function parseCSV(text) {
+    text = text.replace(/^\uFEFF/, "");
+
+    const rows = [];
+    let row = [];
+    let field = "";
+    let insideQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+            if (insideQuotes && next === '"') {
+                field += '"';
+                i++;
+            } else {
+                insideQuotes = !insideQuotes;
+            }
+            continue;
+        }
+
+        if (char === "," && !insideQuotes) {
+            row.push(field);
+            field = "";
+            continue;
+        }
+
+        if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && next === "\n") {
+                i++;
+            }
+
+            row.push(field);
+            field = "";
+
+            if (row.some(value => value !== "")) {
+                rows.push(row);
+            }
+
+            row = [];
+            continue;
+        }
+
+        field += char;
+    }
+
+    if (field !== "" || row.length > 0) {
+        row.push(field);
+        if (row.some(value => value !== "")) {
+            rows.push(row);
+        }
+    }
+
+    if (rows.length === 0) {
+        return [];
+    }
+
+    const headers = rows[0].map(header => header.trim());
+
+    return rows
+        .slice(1)
+        .map(values => {
+            const object = {};
+            headers.forEach((header, index) => {
+                object[header] = values[index] ?? "";
+            });
+            return object;
+        });
+}
+
+/* =========================================================
+   CSV VALIDATION
+========================================================= */
+
+function validateCSV(rows, expectedSection, file) {
+    if (!Array.isArray(rows)) {
+        throw new Error(`${file}: CSVデータが不正です。`);
+    }
+
+    if (rows.length === 0) {
+        throw new Error(`${file}: 問題が0件です。`);
+    }
+
+    const requiredHeaders = [
+        "section",
+        "title",
+        "question_no",
+        "display",
+        "answer"
+    ];
+
+    rows.forEach((row, index) => {
+        requiredHeaders.forEach(header => {
+            if (!Object.prototype.hasOwnProperty.call(row, header)) {
+                throw new Error(
+                    `${file}: 必要な列 "${header}" がありません。`
+                );
+            }
+        });
+
+        const section = String(row.section).trim();
+        const questionNo = String(row.question_no).trim();
+        const answer = String(row.answer ?? "");
+
+        if (Number(section) !== expectedSection) {
+            throw new Error(
+                `${file}: ${index + 2}行目のsectionが${expectedSection}ではありません。`
+            );
+        }
+
+        if (questionNo === "" || !Number.isFinite(Number(questionNo))) {
+            throw new Error(
+                `${file}: ${index + 2}行目のquestion_noが不正です。`
+            );
+        }
+
+        if (answer.length === 0) {
+            throw new Error(
+                `${file}: ${index + 2}行目のanswerが空です。`
+            );
+        }
+    });
+}
+
+/* =========================================================
    PREPARE SECTION
 ========================================================= */
 
 function prepareSection(sectionIndex) {
-
     if (sectionIndex < 0 || sectionIndex >= state.sectionsData.length) {
         finishRace();
         return;
@@ -282,7 +556,9 @@ function prepareSection(sectionIndex) {
     state.currentQuestionIndex = 0;
 
     state.sectionTotalChars = state.sectionQuestions.reduce(
-        (total, question) => total + String(question.answer ?? "").length,
+        (total, question) => {
+            return total + String(question.answer ?? "").length;
+        },
         0
     );
 
@@ -302,24 +578,28 @@ function prepareSection(sectionIndex) {
 }
 
 /* =========================================================
-   SHOW QUESTION（★★★ display を表示するよう修正 ★★★）
+   SHOW QUESTION
 ========================================================= */
 
 function showQuestion() {
+    const sectionArray = state.sectionQuestions;
+    const question = sectionArray[state.currentQuestionIndex];
 
-    const question =
-        state.sectionsData[state.currentSection][state.currentQuestionIndex];
-
-    if (!question) return;
+    if (!question) {
+        return;
+    }
 
     state.currentAnswer = question.answer || "";
     state.currentPosition = 0;
 
-    /* ★★★ 修正：QUESTION欄には display を表示 ★★★ */
     DOM.questionText.textContent = question.display || "";
 
     renderRomajiProgress();
     updateKeyboardHighlight();
+
+    const total = state.sectionQuestions.length;
+    const currentIndex = state.currentQuestionIndex + 1;
+    DOM.questionNumber.textContent = `${currentIndex} / ${total}`;
 }
 
 /* =========================================================
@@ -327,7 +607,6 @@ function showQuestion() {
 ========================================================= */
 
 function renderRomajiProgress() {
-
     const answer = state.currentAnswer;
     const position = state.currentPosition;
 
@@ -363,11 +642,11 @@ function renderRomajiProgress() {
 ========================================================= */
 
 function handleKeyDown(event) {
-
-    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+    }
 
     if (event.key === "Enter") {
-
         event.preventDefault();
 
         if (state.finalFinished) {
@@ -388,9 +667,14 @@ function handleKeyDown(event) {
         return;
     }
 
-    if (typeof event.key !== "string" || event.key.length !== 1) return;
+    if (typeof event.key !== "string" || event.key.length !== 1) {
+        return;
+    }
 
-    if (!state.gameStarted || state.sectionFinished || state.processingAnswer || state.countdownRunning) {
+    if (!state.gameStarted ||
+        state.sectionFinished ||
+        state.processingAnswer ||
+        state.countdownRunning) {
         return;
     }
 
@@ -404,7 +688,6 @@ function handleKeyDown(event) {
 ========================================================= */
 
 function checkCharacter(char) {
-
     const expected = state.currentAnswer[state.currentPosition];
 
     if (char === expected) {
@@ -419,7 +702,6 @@ function checkCharacter(char) {
 ========================================================= */
 
 function handleCorrect() {
-
     state.currentPosition++;
     state.score++;
     state.combo++;
@@ -437,11 +719,9 @@ function handleCorrect() {
     updateRequiredKey();
 
     if (state.currentPosition >= state.currentAnswer.length) {
-
         state.processingAnswer = true;
 
         window.setTimeout(() => {
-
             state.currentQuestionIndex++;
 
             if (state.currentQuestionIndex >= state.sectionQuestions.length) {
@@ -451,7 +731,6 @@ function handleCorrect() {
 
             state.processingAnswer = false;
             showQuestion();
-
         }, NEXT_QUESTION_DELAY);
     }
 }
@@ -461,7 +740,6 @@ function handleCorrect() {
 ========================================================= */
 
 function handleMiss() {
-
     state.miss++;
     state.combo = 0;
 
@@ -474,7 +752,6 @@ function handleMiss() {
 ========================================================= */
 
 function updateHUD() {
-
     DOM.score.textContent = String(state.score);
     DOM.miss.textContent = String(state.miss);
     DOM.combo.textContent = String(state.combo);
@@ -491,7 +768,6 @@ function updateHUD() {
 ========================================================= */
 
 function updateProgress() {
-
     const total = state.sectionTotalChars;
     const current = Math.min(state.sectionCharsTyped, total);
     const percent = total === 0 ? 0 : (current / total) * 100;
@@ -523,8 +799,11 @@ function updateRunner(percent) {
 ========================================================= */
 
 async function startCountdown() {
-
-    if (state.countdownRunning || state.gameStarted || state.sectionFinished) return;
+    if (state.countdownRunning ||
+        state.gameStarted ||
+        state.sectionFinished) {
+        return;
+    }
 
     state.countdownRunning = true;
 
@@ -533,7 +812,6 @@ async function startCountdown() {
     const sequence = ["3", "2", "1", "GO!"];
 
     for (let i = 0; i < sequence.length; i++) {
-
         DOM.countdown.textContent = sequence[i];
 
         DOM.countdown.style.animation = "none";
@@ -563,14 +841,21 @@ async function startCountdown() {
 
 function startTimer() {
     stopTimer();
+
     state.sectionStartTime = performance.now();
+
     updateTimer();
+
     state.timerInterval = window.setInterval(updateTimer, 10);
 }
 
 function updateTimer() {
-    if (!state.gameStarted) return;
+    if (!state.gameStarted) {
+        return;
+    }
+
     const elapsed = performance.now() - state.sectionStartTime;
+
     DOM.timer.textContent = formatTime(elapsed);
 }
 
@@ -583,6 +868,7 @@ function stopTimer() {
 
 function formatTime(milliseconds) {
     const ms = Math.max(0, Math.floor(milliseconds));
+
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     const millis = ms % 1000;
@@ -597,7 +883,7 @@ function formatTime(milliseconds) {
 }
 
 /* =========================================================
-   TYPING INPUT（完全非表示）
+   TYPING INPUT
 ========================================================= */
 
 function focusTypingInput() {
@@ -613,3 +899,15 @@ function focusTypingInput() {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+/* =========================================================
+   PLACEHOLDER: EFFECTS / RESULT / ERROR / KEYS
+   （既存の showGoodEffect / showMissEffect / updateRequiredKey /
+     handleResultNext / finishSection / finishRace / hideAllOverlays /
+     flashPressedKey / clearPressedKeys / showError などは
+     そのまま下に残して使う）
+========================================================= */
+
+// ここから下は、あなたの既存のエフェクト・結果表示・エラー表示・キーエフェクトの関数を
+// そのまま残しておけばOK。
+// （もしここも壊れていたら、その部分だけ貼ってくれれば、そこも修正版を書く）
