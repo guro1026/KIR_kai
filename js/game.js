@@ -607,6 +607,9 @@ async function loadAllSections() {
         }
 
 
+        /*
+         * 全セクションの読み込み完了
+         */
         state.sectionsData =
             loadedSections;
 
@@ -621,6 +624,13 @@ async function loadAllSections() {
         }
 
 
+        /*
+         * SECTION 1を準備
+         *
+         * prepareSection() の中で
+         * showQuestion() が呼ばれるので、
+         * ここではお題を上書きしない。
+         */
         prepareSection(0);
 
 
@@ -629,20 +639,15 @@ async function loadAllSections() {
         );
 
 
-        DOM.questionText.textContent =
-            "PRESS ENTER";
-
-
-        DOM.romajiProgress.textContent =
-            "ENTER";
-
-
+        /*
+         * キーボード入力を受け取れる状態にする
+         */
         focusTypingInput();
-
 
     } catch (error) {
 
         console.error(error);
+
 
         showError(
             error.message ||
@@ -650,7 +655,6 @@ async function loadAllSections() {
         );
     }
 }
-
 
 /* =========================================================
    CSV PARSER
