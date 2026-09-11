@@ -10,28 +10,62 @@
 // GAME SETTINGS
 // ========================================
 
-const TOTAL_SECTIONS = 6;
-const QUESTION_SCORE = 100;
+const TOTAL_SECTIONS = 5;
+const VALID_TEAMS = ["A", "B", "C", "D", "E", "F"];
 const COUNTDOWN_TIME = 1000;
-const NEXT_QUESTION_DELAY = 150;
+const NEXT_QUESTION_DELAY = 200;
+
+
+// ========================================
+// TEAM (URLパラメータで決定・固定)
+// ========================================
+
+function resolveTeam() {
+
+    const params =
+        new URLSearchParams(location.search);
+
+    const raw =
+        (params.get("team") || "A")
+            .trim()
+            .toUpperCase();
+
+    return VALID_TEAMS.includes(raw) ? raw : "A";
+}
+
+const TEAM = resolveTeam();
 
 
 // ========================================
 // GAME STATE
 // ========================================
 
-let questions = [];
+// セクションごとの問題データ { 1: [...], 2: [...], ... }
+let sectionsData = {};
 
 let currentSection = 1;
-let currentQuestionIndex = 0;
 let sectionQuestions = [];
+let currentQuestionIndex = 0;
 
+let currentAnswer = "";
+let currentPosition = 0;
+
+// 現在のセクションの成績（セクションごとにリセット）
 let score = 0;
 let miss = 0;
 let combo = 0;
 
+// レース全体の累計成績
+let totalScore = 0;
+let totalMiss = 0;
+
+// セクションのプレイ時間（結果表示中の待ち時間は含まない）
 let sectionStartTime = 0;
-let totalStartTime = 0;
+let sectionTimes = [];
+
+// ランナー用：セクション内の総文字数と入力済み文字数
+let sectionTotalChars = 0;
+let sectionCharsTyped = 0;
 
 let timerInterval = null;
 
@@ -44,80 +78,48 @@ let processingAnswer = false;
 // DOM
 // ========================================
 
-const sectionNumber =
-    document.getElementById("section-number");
+const sectionNumber = document.getElementById("section-number");
+const questionNumber = document.getElementById("question-number");
+const questionText = document.getElementById("question-text");
+const typingInput = document.getElementById("typing-input");
+const timerDisplay = document.getElementById("timer");
+const teamName = document.getElementById("team-name");
+const runner = document.getElementById("runner");
 
-const questionNumber =
-    document.getElementById("question-number");
+const progressCurrent = document.getElementById("progress-current");
+const progressTotal = document.getElementById("progress-total");
+const progressFill = document.getElementById("progress-fill");
+const progressPercent = document.getElementById("progress-percent");
 
-const questionText =
-    document.getElementById("question-text");
+const romajiProgress = document.getElementById("romaji-progress");
 
-const typingInput =
-    document.getElementById("typing-input");
+const countdownOverlay = document.getElementById("countdown-overlay");
+const countdown = document.getElementById("countdown");
 
-const timerDisplay =
-    document.getElementById("timer");
+const resultOverlay = document.getElementById("result-overlay");
+const resultTime = document.getElementById("result-time");
+const resultScore = document.getElementById("result-score");
+const resultMiss = document.getElementById("result-miss");
+const nextSectionButton = document.getElementById("next-section-button");
 
-const teamName =
-    document.getElementById("team-name");
+const errorOverlay = document.getElementById("error-overlay");
+const errorMessage = document.getElementById("error-message");
+const errorReloadButton = document.getElementById("error-reload-button");
 
-const runner =
-    document.getElementById("runner");
+const finalOverlay = document.getElementById("final-overlay");
+const finalTime = document.getElementById("final-time");
+const finalScore = document.getElementById("final-score");
+const finalMiss = document.getElementById("final-miss");
+const restartButton = document.getElementById("restart-button");
 
-const progressCurrent =
-    document.getElementById("progress-current");
+const scoreDisplay = document.getElementById("score");
+const missDisplay = document.getElementById("miss");
+const comboDisplay = document.getElementById("combo");
+const accuracyDisplay = document.getElementById("accuracy");
+const gameStateDisplay = document.getElementById("game-state");
 
-const progressTotal =
-    document.getElementById("progress-total");
-
-const progressFill =
-    document.getElementById("progress-fill");
-
-const countdownOverlay =
-    document.getElementById("countdown-overlay");
-
-const countdown =
-    document.getElementById("countdown");
-
-const resultOverlay =
-    document.getElementById("result-overlay");
-
-const resultTime =
-    document.getElementById("result-time");
-
-const resultScore =
-    document.getElementById("result-score");
-
-const resultMiss =
-    document.getElementById("result-miss");
-
-const nextSectionButton =
-    document.getElementById("next-section-button");
-
-const errorOverlay =
-    document.getElementById("error-overlay");
-
-const errorMessage =
-    document.getElementById("error-message");
-
-const errorReloadButton =
-    document.getElementById("error-reload-button");
-
-const finalOverlay =
-    document.getElementById("final-overlay");
-
-const finalTime =
-    document.getElementById("final-time");
-
-const finalScore =
-    document.getElementById("final-score");
-
-const finalMiss =
-    document.getElementById("final-miss");
-
-const restartButton =
-    document.getElementById("restart-button");
+const teamItems =
+    document.querySelectorAll(".team-item");
 
 
 // ========================================
@@ -132,6 +134,7 @@ function checkDOM() {
         ["question-text", questionText],
         ["typing-input", typingInput],
         ["timer", timerDisplay],
+        ["team-name", teamName],
         ["runner", runner],
         ["progress-current", progressCurrent],
         ["progress-total", progressTotal],
@@ -161,62 +164,81 @@ function checkDOM() {
 
 
 // ========================================
-// CSV LOADING
+// TEAM 適用
 // ========================================
 
-async function loadQuestions() {
+function applyTeam() {
 
-    try {
+    teamName.textContent = TEAM;
 
-        questionText.textContent =
-            "問題データを読み込んでいます……";
+    runner.src = `img/character/${TEAM}team.png`;
+    runner.alt = `Team ${TEAM}`;
 
-        const response =
-            await fetch("data/questions.csv", {
+    teamItems.forEach(item => {
+
+        if (item.dataset.team === TEAM) {
+
+            item.classList.add("active");
+
+        } else {
+
+            item.classList.remove("active");
+        }
+    });
+}
+
+
+// ========================================
+// CSV LOADING（セクションごとに5ファイル）
+// ========================================
+
+async function loadAllSections() {
+
+    questionText.textContent =
+        "問題データを読み込んでいます……";
+
+    for (let section = 1; section <= TOTAL_SECTIONS; section++) {
+
+        const path = `data/section${section}.csv`;
+
+        let response;
+
+        try {
+
+            response = await fetch(path, {
                 cache: "no-store"
             });
+
+        } catch (networkError) {
+
+            throw new Error(
+                `${path} の読み込みに失敗しました。\n` +
+                `(ネットワークエラー: ${networkError.message})`
+            );
+        }
 
         if (!response.ok) {
 
             throw new Error(
-                `questions.csv の読み込みに失敗しました。\n` +
+                `${path} の読み込みに失敗しました。\n` +
                 `HTTP Status: ${response.status}`
             );
         }
 
-        const csvText =
-            await response.text();
+        const csvText = await response.text();
 
         if (!csvText.trim()) {
 
             throw new Error(
-                "questions.csv が空です。"
+                `${path} が空です。`
             );
         }
 
-        questions =
-            parseCSV(csvText);
+        const rows = parseCSV(csvText, path);
 
-        validateQuestions();
+        validateSectionQuestions(rows, section, path);
 
-        console.log(
-            "CSV読み込み完了:",
-            questions
-        );
-
-        prepareSection();
-
-    } catch (error) {
-
-        console.error(
-            "CSV読み込みエラー:",
-            error
-        );
-
-        showError(
-            "問題データを読み込めませんでした。\n\n" +
-            error.message
-        );
+        sectionsData[section] = rows;
     }
 }
 
@@ -225,46 +247,35 @@ async function loadQuestions() {
 // CSV PARSER
 // ========================================
 
-function parseCSV(csvText) {
+function parseCSV(csvText, path) {
 
     // UTF-8 BOM除去
-    csvText =
-        csvText.replace(/^\uFEFF/, "");
+    csvText = csvText.replace(/^\uFEFF/, "");
 
-    const lines =
-        csvText
-            .split(/\r?\n/)
-            .filter(line => line.trim() !== "");
+    const lines = csvText
+        .split(/\r?\n/)
+        .filter(line => line.trim() !== "");
 
     if (lines.length < 2) {
 
         throw new Error(
-            "CSVに問題データがありません。"
+            `${path} に問題データがありません。`
         );
     }
 
-    const headers =
-        parseCSVLine(lines[0])
-            .map(header =>
-                header
-                    .replace(/^\uFEFF/, "")
-                    .trim()
-            );
+    const headers = parseCSVLine(lines[0])
+        .map(header =>
+            header.replace(/^\uFEFF/, "").trim()
+        );
 
-    const requiredHeaders = [
-        "id",
-        "section",
-        "type",
-        "text",
-        "answer"
-    ];
+    const requiredHeaders = ["id", "text", "answer"];
 
     for (const header of requiredHeaders) {
 
         if (!headers.includes(header)) {
 
             throw new Error(
-                `CSVに「${header}」列がありません。`
+                `${path} に「${header}」列がありません。`
             );
         }
     }
@@ -273,27 +284,19 @@ function parseCSV(csvText) {
 
     for (let i = 1; i < lines.length; i++) {
 
-        const values =
-            parseCSVLine(lines[i]);
+        const values = parseCSVLine(lines[i]);
 
-        if (
-            values.length === 1 &&
-            values[0].trim() === ""
-        ) {
+        if (values.length === 1 && values[0].trim() === "") {
             continue;
         }
 
-        const question = {};
+        const row = {};
 
-        headers.forEach(
-            (header, index) => {
+        headers.forEach((header, index) => {
+            row[header] = (values[index] ?? "").trim();
+        });
 
-                question[header] =
-                    (values[index] ?? "").trim();
-            }
-        );
-
-        result.push(question);
+        result.push(row);
     }
 
     return result;
@@ -301,7 +304,7 @@ function parseCSV(csvText) {
 
 
 // ========================================
-// CSV LINE PARSER
+// CSV LINE PARSER（クォート対応）
 // ========================================
 
 function parseCSVLine(line) {
@@ -311,36 +314,23 @@ function parseCSVLine(line) {
     let current = "";
     let insideQuotes = false;
 
-    for (
-        let i = 0;
-        i < line.length;
-        i++
-    ) {
+    for (let i = 0; i < line.length; i++) {
 
         const char = line[i];
 
-        // ダブルクォート
         if (char === '"') {
 
-            if (
-                insideQuotes &&
-                line[i + 1] === '"'
-            ) {
+            if (insideQuotes && line[i + 1] === '"') {
 
                 current += '"';
                 i++;
 
             } else {
 
-                insideQuotes =
-                    !insideQuotes;
+                insideQuotes = !insideQuotes;
             }
 
-        // カンマ
-        } else if (
-            char === "," &&
-            !insideQuotes
-        ) {
+        } else if (char === "," && !insideQuotes) {
 
             result.push(current);
             current = "";
@@ -358,72 +348,33 @@ function parseCSVLine(line) {
 
 
 // ========================================
-// CSV VALIDATION
+// CSV VALIDATION（セクション単位）
 // ========================================
 
-function validateQuestions() {
+function validateSectionQuestions(rows, section, path) {
 
-    if (!Array.isArray(questions)) {
+    if (!Array.isArray(rows) || rows.length === 0) {
 
         throw new Error(
-            "問題データが正しくありません。"
+            `${path} に問題が1問もありません。`
         );
     }
 
-    if (questions.length === 0) {
+    for (let i = 0; i < rows.length; i++) {
 
-        throw new Error(
-            "問題が1問もありません。"
-        );
-    }
-
-    for (
-        let i = 0;
-        i < questions.length;
-        i++
-    ) {
-
-        const q = questions[i];
-
-        if (!q.section) {
-
-            throw new Error(
-                `問題 ${i + 1}: section がありません。`
-            );
-        }
+        const q = rows[i];
 
         if (!q.text) {
 
             throw new Error(
-                `問題 ${i + 1}: text がありません。`
+                `${path} ${i + 2}行目: text がありません。`
             );
         }
 
         if (!q.answer) {
 
             throw new Error(
-                `問題 ${i + 1}: answer がありません。`
-            );
-        }
-    }
-
-    // 6区間すべて存在するか確認
-    for (
-        let section = 1;
-        section <= TOTAL_SECTIONS;
-        section++
-    ) {
-
-        const count =
-            questions.filter(
-                q =>
-                    Number(q.section) === section
-            ).length;
-
-        if (count === 0) {
-
-            throw new Error(
-                `SECTION ${section} の問題がありません。`
+                `${path} ${i + 2}行目: answer がありません。`
             );
         }
     }
@@ -445,12 +396,11 @@ function prepareSection() {
     typingInput.disabled = true;
     typingInput.value = "";
 
-    sectionQuestions =
-        questions.filter(
-            question =>
-                Number(question.section) ===
-                currentSection
-        );
+    score = 0;
+    miss = 0;
+    combo = 0;
+
+    sectionQuestions = sectionsData[currentSection] || [];
 
     if (sectionQuestions.length === 0) {
 
@@ -463,15 +413,24 @@ function prepareSection() {
 
     currentQuestionIndex = 0;
 
-    sectionNumber.textContent =
-        currentSection;
+    sectionTotalChars = sectionQuestions.reduce(
+        (sum, q) => sum + q.answer.length,
+        0
+    );
 
-    progressTotal.textContent =
-        sectionQuestions.length;
+    sectionCharsTyped = 0;
 
+    sectionNumber.textContent = currentSection;
+
+    progressTotal.textContent = sectionQuestions.length;
     progressCurrent.textContent = "0";
-
     progressFill.style.width = "0%";
+
+    if (progressPercent) {
+        progressPercent.textContent = "0%";
+    }
+
+    updateScore();
 
     resetRunner();
 
@@ -487,28 +446,54 @@ function prepareSection() {
 
 function showQuestion() {
 
-    if (
-        currentQuestionIndex >=
-        sectionQuestions.length
-    ) {
+    if (currentQuestionIndex >= sectionQuestions.length) {
 
         finishSection();
-
         return;
     }
 
-    const question =
-        sectionQuestions[currentQuestionIndex];
+    const question = sectionQuestions[currentQuestionIndex];
+
+    currentAnswer = question.answer;
+    currentPosition = 0;
 
     questionNumber.textContent =
         `QUESTION ${currentQuestionIndex + 1}`;
 
-    questionText.textContent =
-        question.text;
+    questionText.textContent = question.text;
 
     typingInput.value = "";
 
+    renderRomajiProgress();
     updateProgress();
+}
+
+
+// ========================================
+// ROMAJI 進捗表示（入力済み／未入力）
+// ========================================
+
+function renderRomajiProgress() {
+
+    if (!romajiProgress) {
+        return;
+    }
+
+    const typed = currentAnswer.slice(0, currentPosition);
+    const rest = currentAnswer.slice(currentPosition);
+
+    romajiProgress.innerHTML = "";
+
+    const typedSpan = document.createElement("span");
+    typedSpan.className = "romaji-typed";
+    typedSpan.textContent = typed;
+
+    const restSpan = document.createElement("span");
+    restSpan.className = "romaji-rest";
+    restSpan.textContent = rest;
+
+    romajiProgress.appendChild(typedSpan);
+    romajiProgress.appendChild(restSpan);
 }
 
 
@@ -518,9 +503,8 @@ function showQuestion() {
 
 function sleep(milliseconds) {
 
-    return new Promise(
-        resolve =>
-            setTimeout(resolve, milliseconds)
+    return new Promise(resolve =>
+        setTimeout(resolve, milliseconds)
     );
 }
 
@@ -530,37 +514,30 @@ async function startCountdown() {
     gameStarted = false;
     typingInput.disabled = true;
 
-    countdownOverlay.style.display =
-        "flex";
+    if (gameStateDisplay) {
+        gameStateDisplay.textContent = "READY";
+    }
 
-    const count = [
-        "3",
-        "2",
-        "1",
-        "GO!"
-    ];
+    countdownOverlay.classList.add("active");
+    countdownOverlay.setAttribute("aria-hidden", "false");
+
+    const count = ["3", "2", "1", "GO!"];
 
     for (const value of count) {
 
-        countdown.textContent =
-            value;
+        countdown.textContent = value;
 
-        countdown.classList.remove(
-            "countdown-pop"
-        );
+        countdown.classList.remove("countdown-pop");
 
-        // CSSアニメーションを再実行
         void countdown.offsetWidth;
 
-        countdown.classList.add(
-            "countdown-pop"
-        );
+        countdown.classList.add("countdown-pop");
 
         await sleep(COUNTDOWN_TIME);
     }
 
-    countdownOverlay.style.display =
-        "none";
+    countdownOverlay.classList.remove("active");
+    countdownOverlay.setAttribute("aria-hidden", "true");
 
     startGame();
 }
@@ -578,20 +555,17 @@ function startGame() {
 
     gameStarted = true;
 
-    sectionStartTime =
-        performance.now();
-
-    if (currentSection === 1) {
-
-        totalStartTime =
-            performance.now();
-    }
+    sectionStartTime = performance.now();
 
     startTimer();
 
     typingInput.disabled = false;
-
+    typingInput.value = "";
     typingInput.focus();
+
+    if (gameStateDisplay) {
+        gameStateDisplay.textContent = "PLAYING";
+    }
 }
 
 
@@ -603,21 +577,17 @@ function startTimer() {
 
     stopTimer();
 
-    timerInterval =
-        setInterval(() => {
+    timerInterval = setInterval(() => {
 
-            if (!gameStarted) {
-                return;
-            }
+        if (!gameStarted) {
+            return;
+        }
 
-            const elapsed =
-                performance.now() -
-                sectionStartTime;
+        const elapsed = performance.now() - sectionStartTime;
 
-            timerDisplay.textContent =
-                formatTime(elapsed);
+        timerDisplay.textContent = formatTime(elapsed);
 
-        }, 10);
+    }, 10);
 }
 
 
@@ -626,7 +596,6 @@ function stopTimer() {
     if (timerInterval !== null) {
 
         clearInterval(timerInterval);
-
         timerInterval = null;
     }
 }
@@ -638,17 +607,11 @@ function stopTimer() {
 
 function formatTime(milliseconds) {
 
-    const totalSeconds =
-        milliseconds / 1000;
+    const totalSeconds = milliseconds / 1000;
 
-    const minutes =
-        Math.floor(totalSeconds / 60);
-
-    const seconds =
-        Math.floor(totalSeconds % 60);
-
-    const ms =
-        Math.floor(milliseconds % 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const ms = Math.floor(milliseconds % 1000);
 
     return (
         String(minutes).padStart(2, "0") +
@@ -661,56 +624,51 @@ function formatTime(milliseconds) {
 
 
 // ========================================
-// TYPING INPUT
+// 1文字ずつのリアルタイム判定（keydownベース）
 // ========================================
 
-typingInput.addEventListener(
-    "input",
-    handleTyping
-);
+document.addEventListener("keydown", handleKeydown);
 
 
-function handleTyping() {
+function handleKeydown(event) {
 
-    if (!gameStarted) {
+    if (!gameStarted || sectionFinished || processingAnswer) {
         return;
     }
 
-    if (processingAnswer) {
+    const key = event.key;
+
+    // 修飾キー・特殊キー（Shift, Enter, Tab, 矢印キー等）は無視する。
+    // answerに登場しうる文字（アルファベット・記号・スペース）は
+    // すべて key.length === 1 になるため、ここで対象を絞り込める。
+    if (key.length !== 1) {
         return;
     }
 
-    const question =
-        sectionQuestions[currentQuestionIndex];
+    // ブラウザの既定動作（typing-inputへの直接入力等）を止める。
+    event.preventDefault();
 
-    if (!question) {
+    const target = currentAnswer[currentPosition];
+
+    if (target === undefined) {
         return;
     }
 
-    const answer =
-        question.answer;
-
-    const input =
-        typingInput.value;
+    const inputChar = key.toLowerCase();
+    const targetChar = target.toLowerCase();
 
 
     // ====================================
-    // WRONG
+    // MISS
     // ====================================
 
-    if (!answer.startsWith(input)) {
+    if (inputChar !== targetChar) {
 
         miss++;
-
         combo = 0;
 
         updateScore();
-
         showEffect("miss");
-
-        // 間違った最後の1文字だけ削除
-        typingInput.value =
-            input.slice(0, -1);
 
         return;
     }
@@ -720,44 +678,37 @@ function handleTyping() {
     // CORRECT
     // ====================================
 
-    if (input === answer) {
+    currentPosition++;
+    score++;
+    combo++;
+
+    sectionCharsTyped++;
+
+    updateScore();
+    renderRomajiProgress();
+    moveRunner();
+    showEffect("good");
+
+    if (combo >= 5 && combo % 5 === 0) {
+        showEffect("boost");
+    }
+
+    if (currentPosition >= currentAnswer.length) {
 
         processingAnswer = true;
-
-        score += QUESTION_SCORE;
-
-        combo++;
-
-        updateScore();
-
-        showEffect("good");
-
-        // コンボが一定以上ならBOOST
-        if (combo >= 5 && combo % 5 === 0) {
-
-            showEffect("boost");
-        }
-
-        moveRunner();
 
         setTimeout(() => {
 
             currentQuestionIndex++;
-
             processingAnswer = false;
 
-            if (
-                currentQuestionIndex >=
-                sectionQuestions.length
-            ) {
+            if (currentQuestionIndex >= sectionQuestions.length) {
 
                 finishSection();
 
             } else {
 
                 showQuestion();
-
-                typingInput.focus();
             }
 
         }, NEXT_QUESTION_DELAY);
@@ -771,99 +722,84 @@ function handleTyping() {
 
 function updateScore() {
 
-    document.getElementById("score")
-        .textContent = score;
+    scoreDisplay.textContent = score;
+    missDisplay.textContent = miss;
+    comboDisplay.textContent = combo;
 
-    document.getElementById("miss")
-        .textContent = miss;
+    if (accuracyDisplay) {
 
-    document.getElementById("combo")
-        .textContent = combo;
+        const attempts = score + miss;
+
+        const accuracy =
+            attempts > 0
+                ? Math.round((score / attempts) * 100)
+                : 100;
+
+        accuracyDisplay.textContent = `${accuracy}%`;
+    }
 }
 
 
 // ========================================
-// PROGRESS
+// PROGRESS（問題数ベース）
 // ========================================
 
 function updateProgress() {
 
-    const current =
-        currentQuestionIndex;
+    const current = currentQuestionIndex;
+    const total = sectionQuestions.length;
 
-    const total =
-        sectionQuestions.length;
-
-    progressCurrent.textContent =
-        current;
-
-    progressTotal.textContent =
-        total;
+    progressCurrent.textContent = current;
+    progressTotal.textContent = total;
 
     if (total <= 0) {
 
-        progressFill.style.width =
-            "0%";
+        progressFill.style.width = "0%";
+
+        if (progressPercent) {
+            progressPercent.textContent = "0%";
+        }
 
         return;
     }
 
-    const percent =
-        (current / total) * 100;
+    const percent = (current / total) * 100;
 
-    progressFill.style.width =
-        `${percent}%`;
+    progressFill.style.width = `${percent}%`;
+
+    if (progressPercent) {
+        progressPercent.textContent = `${Math.round(percent)}%`;
+    }
 }
 
 
 // ========================================
-// RUNNER
+// RUNNER（セクション内の入力済み文字数ベース）
 // ========================================
 
 function resetRunner() {
 
-    runner.style.left =
-        "0%";
-
-    runner.classList.remove(
-        "runner-finish"
-    );
+    runner.style.left = "0%";
+    runner.classList.remove("runner-finish");
 }
 
 
 function moveRunner() {
 
-    const total =
-        sectionQuestions.length;
-
-    if (total <= 0) {
+    if (sectionTotalChars <= 0) {
         return;
     }
 
-    const percent =
-        ((currentQuestionIndex + 1) /
-            total) * 100;
+    const percent = (sectionCharsTyped / sectionTotalChars) * 100;
 
-    /*
-     * 旗の直前まで走らせる。
-     * 100%まで行くと画像が画面外に出るため
-     * 最大94%に制限。
-     */
+    // 旗の直前まで走らせる（100%だと画像が画面外に出るため）。
+    const safePercent = Math.min(percent, 94);
 
-    const safePercent =
-        Math.min(percent, 94);
+    runner.style.left = `${safePercent}%`;
 
-    runner.style.left =
-        `${safePercent}%`;
+    if (sectionCharsTyped >= sectionTotalChars) {
 
-    if (
-        currentQuestionIndex + 1 >=
-        total
-    ) {
-
-        runner.classList.add(
-            "runner-finish"
-        );
+        runner.classList.add("runner-finish");
     }
 }
 
@@ -878,39 +814,26 @@ function showEffect(type) {
 
     if (type === "good") {
 
-        effect =
-            document.getElementById(
-                "good-effect"
-            );
+        effect = document.getElementById("good-effect");
 
     } else if (type === "miss") {
 
-        effect =
-            document.getElementById(
-                "miss-effect"
-            );
+        effect = document.getElementById("miss-effect");
 
     } else if (type === "boost") {
 
-        effect =
-            document.getElementById(
-                "boost-effect"
-            );
+        effect = document.getElementById("boost-effect");
     }
 
     if (!effect) {
         return;
     }
 
-    effect.classList.remove(
-        "effect-show"
-    );
+    effect.classList.remove("show");
 
     void effect.offsetWidth;
 
-    effect.classList.add(
-        "effect-show"
-    );
+    effect.classList.add("show");
 }
 
 
@@ -931,24 +854,25 @@ function finishSection() {
 
     typingInput.disabled = true;
 
-    const elapsed =
-        performance.now() -
-        sectionStartTime;
+    if (gameStateDisplay) {
+        gameStateDisplay.textContent = "FINISH";
+    }
 
-    timerDisplay.textContent =
-        formatTime(elapsed);
+    const elapsed = performance.now() - sectionStartTime;
 
-    resultTime.textContent =
-        formatTime(elapsed);
+    sectionTimes[currentSection - 1] = elapsed;
 
-    resultScore.textContent =
-        score;
+    totalScore += score;
+    totalMiss += miss;
 
-    resultMiss.textContent =
-        miss;
+    timerDisplay.textContent = formatTime(elapsed);
 
-    resultOverlay.style.display =
-        "flex";
+    resultTime.textContent = formatTime(elapsed);
+    resultScore.textContent = score;
+    resultMiss.textContent = miss;
+
+    resultOverlay.classList.add("active");
+    resultOverlay.setAttribute("aria-hidden", "false");
 }
 
 
@@ -956,28 +880,21 @@ function finishSection() {
 // NEXT SECTION
 // ========================================
 
-nextSectionButton.addEventListener(
-    "click",
-    () => {
+nextSectionButton.addEventListener("click", () => {
 
-        resultOverlay.style.display =
-            "none";
+    resultOverlay.classList.remove("active");
+    resultOverlay.setAttribute("aria-hidden", "true");
 
-        currentSection++;
+    currentSection++;
 
-        if (
-            currentSection >
-            TOTAL_SECTIONS
-        ) {
+    if (currentSection > TOTAL_SECTIONS) {
 
-            finishRace();
-
-            return;
-        }
-
-        prepareSection();
+        finishRace();
+        return;
     }
-);
+
+    prepareSection();
+});
 
 
 // ========================================
@@ -992,21 +909,21 @@ function finishRace() {
 
     typingInput.disabled = true;
 
-    const totalElapsed =
-        performance.now() -
-        totalStartTime;
+    if (gameStateDisplay) {
+        gameStateDisplay.textContent = "RACE FINISH";
+    }
 
-    finalTime.textContent =
-        formatTime(totalElapsed);
+    const totalElapsed = sectionTimes.reduce(
+        (sum, t) => sum + (t || 0),
+        0
+    );
 
-    finalScore.textContent =
-        score;
+    finalTime.textContent = formatTime(totalElapsed);
+    finalScore.textContent = totalScore;
+    finalMiss.textContent = totalMiss;
 
-    finalMiss.textContent =
-        miss;
-
-    finalOverlay.style.display =
-        "flex";
+    finalOverlay.classList.add("active");
+    finalOverlay.setAttribute("aria-hidden", "false");
 }
 
 
@@ -1014,10 +931,7 @@ function finishRace() {
 // RESTART
 // ========================================
 
-restartButton.addEventListener(
-    "click",
-    restartGame
-);
+restartButton.addEventListener("click", restartGame);
 
 
 function restartGame() {
@@ -1031,24 +945,30 @@ function restartGame() {
     miss = 0;
     combo = 0;
 
+    totalScore = 0;
+    totalMiss = 0;
+
+    sectionTimes = [];
+
     sectionStartTime = 0;
-    totalStartTime = 0;
+
+    sectionTotalChars = 0;
+    sectionCharsTyped = 0;
 
     gameStarted = false;
     sectionFinished = false;
     processingAnswer = false;
 
-    resultOverlay.style.display =
-        "none";
+    resultOverlay.classList.remove("active");
+    resultOverlay.setAttribute("aria-hidden", "true");
 
-    finalOverlay.style.display =
-        "none";
+    finalOverlay.classList.remove("active");
+    finalOverlay.setAttribute("aria-hidden", "true");
 
-    errorOverlay.style.display =
-        "none";
+    errorOverlay.classList.remove("active");
+    errorOverlay.setAttribute("aria-hidden", "true");
 
-    timerDisplay.textContent =
-        "00:00.000";
+    timerDisplay.textContent = "00:00.000";
 
     updateScore();
 
@@ -1068,11 +988,10 @@ function showError(message) {
 
     typingInput.disabled = true;
 
-    errorMessage.textContent =
-        message;
+    errorMessage.textContent = message;
 
-    errorOverlay.style.display =
-        "flex";
+    errorOverlay.classList.add("active");
+    errorOverlay.setAttribute("aria-hidden", "false");
 }
 
 
@@ -1080,32 +999,9 @@ function showError(message) {
 // ERROR RELOAD
 // ========================================
 
-errorReloadButton.addEventListener(
-    "click",
-    () => {
-
-        location.reload();
-    }
-);
-
-
-// ========================================
-// KEYBOARD SAFETY
-// ========================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key === "Escape" &&
-            gameStarted
-        ) {
-
-            event.preventDefault();
-        }
-    }
-);
+errorReloadButton.addEventListener("click", () => {
+    location.reload();
+});
 
 
 // ========================================
@@ -1117,32 +1013,23 @@ async function initializeGame() {
     try {
 
         checkDOM();
+        applyTeam();
 
         updateScore();
 
-        timerDisplay.textContent =
-            "00:00.000";
+        timerDisplay.textContent = "00:00.000";
 
-        console.log(
-            "========================================"
-        );
+        console.log("========================================");
+        console.log("KIR Typing Game START / TEAM:", TEAM);
+        console.log("========================================");
 
-        console.log(
-            "KIR Typing Game START"
-        );
+        await loadAllSections();
 
-        console.log(
-            "========================================"
-        );
-
-        await loadQuestions();
+        prepareSection();
 
     } catch (error) {
 
-        console.error(
-            "ゲーム初期化エラー:",
-            error
-        );
+        console.error("ゲーム初期化エラー:", error);
 
         showError(
             "ゲームの初期化に失敗しました。\n\n" +
@@ -1156,15 +1043,9 @@ async function initializeGame() {
 // DOM READY
 // ========================================
 
-if (
-    document.readyState ===
-    "loading"
-) {
+if (document.readyState === "loading") {
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        initializeGame
-    );
+    document.addEventListener("DOMContentLoaded", initializeGame);
 
 } else {
 
