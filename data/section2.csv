@@ -1,6 +1,6 @@
-id,text,answer
-1,早起きは三文の徳,hayaoki wa sanmon no toku
-2,継続は力なり,keizoku wa chikara nari
-3,笑う門には福来る,warau kado niwa fuku kitaru
-4,石の上にも三年,ishi no ue nimo sannen
-5,案ずるより産むが易し,anzuru yori umu ga yasushi
+question_no,section,title,display,answer
+1,2,日本語「Kirあるある」,現場が違うと、[全角スペース]同じKirの社員でも「はじめまして」から始まることがある。,"genba[半角スペース]ga[半角スペース]chigau[半角スペース]to,[半角スペース]onaji[半角スペース]kir[半角スペース]no[半角スペース]shain[半角スペース]demo[半角スペース]hajimemashite[半角スペース]kara[半角スペース]hajimaru[半角スペース]koto[半角スペース]ga[半角スペース]aru."
+2,2,日本語「Kirあるある」,営業部から連絡が来ると、[全角スペース]案件の話か、[全角スペース]社内イベントの話かで少しドキドキする。,"eigyoubu[半角スペース]kara[半角スペース]renraku[半角スペース]ga[半角スペース]kuru[半角スペース]to,[半角スペース]anken[半角スペース]no[半角スペース]hanashi[半角スペース]ka,[半角スペース]shanai[半角スペース]event[半角スペース]no[半角スペース]hanashi[半角スペース]ka[半角スペース]de[半角スペース]sukoshi[半角スペース]dokidoki[半角スペース]suru."
+3,2,日本語「Kirあるある」,面接の前は準備していたのに、[全角スペース]本番になると知っている単語が急に出なくなる。,"mensetsu[半角スペース]no[半角スペース]mae[半角スペース]wa[半角スペース]junbi[半角スペース]shite[半角スペース]ita[半角スペース]noni,[半角スペース]honban[半角スペース]ni[半角スペース]naru[半角スペース]to,[半角スペース]shitte[半角スペース]iru[半角スペース]tango[半角スペース]ga[半角スペース]kyuu[半角スペース]ni[半角スペース]denakunaru."
+4,2,日本語「Kirあるある」,現場で使うツールが全部違う。[全角スペース]Slack、Teams、メールがいつの間にか並んでいる。,"genba[半角スペース]de[半角スペース]tsukau[半角スペース]tool[半角スペース]ga[半角スペース]zenbu[半角スペース]chigau.[半角スペース]slack,[半角スペース]teams,[半角スペース]mail[半角スペース]ga[半角スペース]itsunomanika[半角スペース]narande[半角スペース]iru."
+5,2,日本語「Kirあるある」,案件の要件を見て「これできる人誰かいるかな」と思ったとき、[全角スペース]意外な人の名前が上がる！,"anken[半角スペース]no[半角スペース]youken[半角スペース]wo[半角スペース]mite,[半角スペース]kore[半角スペース]dekiru[半角スペース]hito[半角スペース]dareka[半角スペース]iru[半角スペース]kana[半角スペース]to[半角スペース]omotta[半角スペース]toki,[半角スペース]igai[半角スペース]na[半角スペース]hito[半角スペース]no[半角スペース]namae[半角スペース]ga[半角スペース]agaru!"

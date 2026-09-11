@@ -1,6 +1,25 @@
-id,text,answer
-1,有終の美を飾ろう,yuushuu no bi wo kazarou
-2,一致団結で乗り切ろう,icchi danketsu de norikirou
-3,不撓不屈の精神で挑め,futou fukutsu no seishin de idome
-4,最後まで諦めずに走り抜け,saigo made akiramezu ni hashirinuke
-5,ゴールはすぐそこだ走り切れ,go-ru wa sugu soko da hashirikire
+question_no,section,title,display,answer
+1,5,プログラミングタイピング②,,ls[半角スペース]-la
+2,5,プログラミングタイピング②,,cd[半角スペース]/var/log
+3,5,プログラミングタイピング②,,grep[半角スペース]-R[半角スペース]""ERROR""[半角スペース]./app.log[半角スペース]|[半角スペース]tail[半角スペース]-n[半角スペース]20
+4,5,プログラミングタイピング②,,find[半角スペース]/tmp[半角スペース]-type[半角スペース]f[半角スペース]-name[半角スペース]""*.log""[半角スペース]-mtime[半角スペース]+7
+5,5,プログラミングタイピング②,,df[半角スペース]-h
+6,5,プログラミングタイピング②,,free[半角スペース]-m
+7,5,プログラミングタイピング②,,ps[半角スペース]aux[半角スペース]|[半角スペース]grep[半角スペース]nginx
+8,5,プログラミングタイピング②,,systemctl[半角スペース]status[半角スペース]nginx
+9,5,プログラミングタイピング②,,journalctl[半角スペース]-u[半角スペース]nginx[半角スペース]--since[半角スペース]""30[半角スペース]minutes[半角スペース]ago""
+10,5,プログラミングタイピング②,,ip[半角スペース]addr[半角スペース]show
+11,5,プログラミングタイピング②,,ip[半角スペース]route
+12,5,プログラミングタイピング②,,ping[半角スペース]-c[半角スペース]4[半角スペース]8.8.8.8
+13,5,プログラミングタイピング②,,curl[半角スペース]-I[半角スペース]https://example.com
+14,5,プログラミングタイピング②,,ss[半角スペース]-tulpn
+15,5,プログラミングタイピング②,,chmod[半角スペース]755[半角スペース]deploy.sh
+16,5,プログラミングタイピング②,,chown[半角スペース]app:app[半角スペース]/opt/app[半角スペース]-R
+17,5,プログラミングタイピング②,,tar[半角スペース]-czf[半角スペース]backup.tar.gz[半角スペース]/opt/app
+18,5,プログラミングタイピング②,,export[半角スペース]APP_ENV=production
+19,5,プログラミングタイピング②,,echo[半角スペース]$APP_ENV
+20,5,プログラミングタイピング②,,git[半角スペース]status
+21,5,プログラミングタイピング②,,git[半角スペース]pull[半角スペース]origin[半角スペース]main
+22,5,プログラミングタイピング②,,docker[半角スペース]ps
+23,5,プログラミングタイピング②,,docker[半角スペース]logs[半角スペース]--tail[半角スペース]50[半角スペース]kir-app
+24,5,プログラミングタイピング②,,docker[半角スペース]exec[半角スペース]-it[半角スペース]kir-app[半角スペース]/bin/bash
