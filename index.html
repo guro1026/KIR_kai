@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>KIR RECREATION TOURNAMENT 2026</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -11,37 +13,34 @@
 
 <main class="game">
 
-    <!-- =========================================
+    <!-- =====================================================
          HEADER
-    ========================================== -->
+    ====================================================== -->
     <header class="header">
 
-        <div class="brand">
-            <div class="brand-mark">
-                <span></span>
-                <span></span>
-                <span></span>
+        <div class="header-title">
+            <div class="event-title">
+                KIR RECREATION TOURNAMENT 2026
             </div>
 
-            <div class="brand-text">
-                <div class="brand-kir">KIR RECREATION TOURNAMENT 2026</div>
-                <div class="brand-title">めちゃむずキーボード早打ち<span>駅伝</span></div>
+            <div class="game-title">
+                めちゃむずキーボード早打ち駅伝
             </div>
         </div>
 
-        <div class="top-status">
+        <div class="header-status">
 
-            <div class="status-card section-card">
+            <div class="status-box">
                 <span class="status-label">SECTION</span>
-                <strong>第 <span id="section-number">1</span> 区</strong>
+                <strong id="section-number">1</strong>
             </div>
 
-            <div class="status-card team-card-main">
+            <div class="status-box">
                 <span class="status-label">TEAM</span>
                 <strong id="team-name">TEAM A</strong>
             </div>
 
-            <div class="status-card time-card">
+            <div class="status-box timer-box">
                 <span class="status-label">TIME</span>
                 <strong id="timer">00:00.000</strong>
             </div>
@@ -51,42 +50,52 @@
     </header>
 
 
-    <!-- =========================================
-         TEAM SELECTOR
-    ========================================== -->
-    <section class="team-selector" aria-label="Team selector">
+    <!-- =====================================================
+         TEAM SELECT
+    ====================================================== -->
+    <section class="team-selector">
 
-        <button class="team-select active" data-team="A" type="button">A</button>
-        <button class="team-select" data-team="B" type="button">B</button>
-        <button class="team-select" data-team="C" type="button">C</button>
-        <button class="team-select" data-team="D" type="button">D</button>
-        <button class="team-select" data-team="E" type="button">E</button>
-        <button class="team-select" data-team="F" type="button">F</button>
+        <button class="team-select active" data-team="A">
+            TEAM A
+        </button>
+
+        <button class="team-select" data-team="B">
+            TEAM B
+        </button>
+
+        <button class="team-select" data-team="C">
+            TEAM C
+        </button>
+
+        <button class="team-select" data-team="D">
+            TEAM D
+        </button>
+
+        <button class="team-select" data-team="E">
+            TEAM E
+        </button>
+
+        <button class="team-select" data-team="F">
+            TEAM F
+        </button>
 
     </section>
 
 
-    <!-- =========================================
+    <!-- =====================================================
          RACE TRACK
-    ========================================== -->
+    ====================================================== -->
     <section class="race-panel">
 
-        <div class="race-side-label start-label">
-            START
-            <span>»»</span>
-        </div>
+        <div class="race-background">
 
-        <div class="race-area">
+            <div class="city-line city-line-1"></div>
+            <div class="city-line city-line-2"></div>
+            <div class="city-line city-line-3"></div>
 
-            <div class="city-background"></div>
+            <div class="road-line"></div>
 
-            <div class="race-track">
-                <div class="track-glow"></div>
-                <div class="track-line"></div>
-                <div class="track-arrows"></div>
-            </div>
-
-            <div id="runner" class="runner">
+            <div class="runner" id="runner">
                 <img
                     id="runner-image"
                     src="img/character/Ateam.png"
@@ -94,226 +103,284 @@
                 >
             </div>
 
-            <div class="finish-line"></div>
-
-            <div class="finish-marker">
+            <div class="finish-line">
                 <img
                     id="finish-flag"
                     src="img/etc/finish_flag.png"
                     alt="FINISH"
                 >
-                <span>FINISH</span>
             </div>
 
-        </div>
-
-        <div class="race-side-label finish-label">
-            FINISH
         </div>
 
     </section>
 
 
-    <!-- =========================================
-         MAIN TYPING AREA
-    ========================================== -->
+    <!-- =====================================================
+         TYPING PANEL
+    ====================================================== -->
     <section class="typing-panel">
 
-        <!-- Left effect -->
-        <div id="good-effect" class="side-effect good-effect">
+        <!-- GOOD EFFECT -->
+        <div id="good-effect" class="good-effect">
             GOOD!
         </div>
 
-        <!-- Right combo -->
-        <div class="combo-display">
-            <span class="combo-label">COMBO</span>
-            <strong>X<span id="combo-side">0</span></strong>
-        </div>
 
+        <!-- COMBO SIDE -->
+        <div id="combo-side" class="combo-side">
 
-        <!-- Question -->
-        <div class="question-panel">
+            <span class="combo-label">
+                COMBO
+            </span>
 
-            <div class="question-meta">
-                <span>お題</span>
-                <span>///</span>
-                <span>QUESTION <b id="question-number">1</b></span>
-            </div>
-
-            <div id="question-text" class="question-text">
-                問題データを読み込んでいます……
-            </div>
-
-            <div id="romaji-progress" class="romaji-progress"></div>
+            <strong id="combo-side-value">
+                0
+            </strong>
 
         </div>
 
 
-        <!-- =====================================
+        <!-- QUESTION -->
+        <div class="question-area">
+
+            <div class="question-header">
+
+                <span>
+                    QUESTION
+                </span>
+
+                <strong id="question-number">
+                    1 / 1
+                </strong>
+
+            </div>
+
+
+            <div class="question-card">
+
+                <div
+                    id="question-text"
+                    class="question-text"
+                >
+                    READY
+                </div>
+
+            </div>
+
+
+            <div class="answer-progress">
+
+                <div
+                    id="romaji-progress"
+                    class="romaji-progress"
+                >
+                    READY
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
              VIRTUAL KEYBOARD
-        ====================================== -->
+        ================================================== -->
         <div class="keyboard">
 
-            <!-- Number row -->
-            <div class="keyboard-row number-row">
-
-                <div class="key" data-key="`">`</div>
-                <div class="key" data-key="1">1</div>
-                <div class="key" data-key="2">2</div>
-                <div class="key" data-key="3">3</div>
-                <div class="key" data-key="4">4</div>
-                <div class="key" data-key="5">5</div>
-                <div class="key" data-key="6">6</div>
-                <div class="key" data-key="7">7</div>
-                <div class="key" data-key="8">8</div>
-                <div class="key" data-key="9">9</div>
-                <div class="key" data-key="0">0</div>
-                <div class="key" data-key="-">-</div>
-                <div class="key" data-key="^">^</div>
-                <div class="key wide-key" data-key="Backspace">BACKSPACE</div>
-
-            </div>
-
-
-            <!-- QWERTY -->
             <div class="keyboard-row">
 
-                <div class="key" data-key="q">Q</div>
-                <div class="key" data-key="w">W</div>
-                <div class="key" data-key="e">E</div>
-                <div class="key" data-key="r">R</div>
-                <div class="key" data-key="t">T</div>
-                <div class="key" data-key="y">Y</div>
-                <div class="key" data-key="u">U</div>
-                <div class="key" data-key="i">I</div>
-                <div class="key" data-key="o">O</div>
-                <div class="key" data-key="p">P</div>
-                <div class="key" data-key="@">@</div>
-                <div class="key" data-key="[">[</div>
-                <div class="key" data-key="]">]</div>
+                <button class="key" data-key="1">1</button>
+                <button class="key" data-key="2">2</button>
+                <button class="key" data-key="3">3</button>
+                <button class="key" data-key="4">4</button>
+                <button class="key" data-key="5">5</button>
+                <button class="key" data-key="6">6</button>
+                <button class="key" data-key="7">7</button>
+                <button class="key" data-key="8">8</button>
+                <button class="key" data-key="9">9</button>
+                <button class="key" data-key="0">0</button>
+                <button class="key" data-key="-">-</button>
+                <button class="key" data-key="^">^</button>
+                <button class="key" data-key="\\">\</button>
 
             </div>
 
 
-            <!-- ASDF -->
             <div class="keyboard-row">
 
-                <div class="key spacer-key"></div>
-
-                <div class="key" data-key="a">A</div>
-                <div class="key" data-key="s">S</div>
-                <div class="key" data-key="d">D</div>
-                <div class="key" data-key="f">F</div>
-                <div class="key" data-key="g">G</div>
-                <div class="key" data-key="h">H</div>
-                <div class="key" data-key="j">J</div>
-                <div class="key" data-key="k">K</div>
-                <div class="key" data-key="l">L</div>
-                <div class="key" data-key=";">;</div>
-                <div class="key" data-key=":">:</div>
-
-                <div class="key shift-key" data-key="Shift">
-                    ⇧ SHIFT
-                </div>
+                <button class="key" data-key="q">Q</button>
+                <button class="key" data-key="w">W</button>
+                <button class="key" data-key="e">E</button>
+                <button class="key" data-key="r">R</button>
+                <button class="key" data-key="t">T</button>
+                <button class="key" data-key="y">Y</button>
+                <button class="key" data-key="u">U</button>
+                <button class="key" data-key="i">I</button>
+                <button class="key" data-key="o">O</button>
+                <button class="key" data-key="p">P</button>
+                <button class="key" data-key="@">@</button>
+                <button class="key" data-key="[">[</button>
 
             </div>
 
 
-            <!-- ZXCV -->
             <div class="keyboard-row">
 
-                <div class="key shift-key left-shift" data-key="Shift">
-                    ⇧ SHIFT
-                </div>
-
-                <div class="key" data-key="z">Z</div>
-                <div class="key" data-key="x">X</div>
-                <div class="key" data-key="c">C</div>
-                <div class="key" data-key="v">V</div>
-                <div class="key" data-key="b">B</div>
-                <div class="key" data-key="n">N</div>
-                <div class="key" data-key="m">M</div>
-                <div class="key" data-key=",">,</div>
-                <div class="key" data-key=".">.</div>
-                <div class="key" data-key="/">/</div>
-
-                <div class="key shift-key" data-key="Shift">
-                    ⇧ SHIFT
-                </div>
+                <button class="key" data-key="a">A</button>
+                <button class="key" data-key="s">S</button>
+                <button class="key" data-key="d">D</button>
+                <button class="key" data-key="f">F</button>
+                <button class="key" data-key="g">G</button>
+                <button class="key" data-key="h">H</button>
+                <button class="key" data-key="j">J</button>
+                <button class="key" data-key="k">K</button>
+                <button class="key" data-key="l">L</button>
+                <button class="key" data-key=";">;</button>
+                <button class="key" data-key=":">:</button>
+                <button class="key" data-key="]">]</button>
 
             </div>
 
 
-            <!-- Space -->
-            <div class="keyboard-row space-row">
+            <div class="keyboard-row">
 
-                <div class="key bottom-key"></div>
+                <button
+                    class="key key-shift"
+                    data-key="shift"
+                >
+                    SHIFT
+                </button>
 
-                <div class="key space-key" data-key=" ">
+                <button class="key" data-key="z">Z</button>
+                <button class="key" data-key="x">X</button>
+                <button class="key" data-key="c">C</button>
+                <button class="key" data-key="v">V</button>
+                <button class="key" data-key="b">B</button>
+                <button class="key" data-key="n">N</button>
+                <button class="key" data-key="m">M</button>
+                <button class="key" data-key=",">,</button>
+                <button class="key" data-key=".">.</button>
+                <button class="key" data-key="/">/</button>
+
+                <button
+                    class="key key-shift"
+                    data-key="shift"
+                >
+                    SHIFT
+                </button>
+
+            </div>
+
+
+            <div class="keyboard-row keyboard-bottom">
+
+                <button
+                    class="key key-space"
+                    data-key=" "
+                >
                     SPACE
-                </div>
-
-                <div class="key bottom-key"></div>
+                </button>
 
             </div>
 
         </div>
 
 
-        <!-- =====================================
+        <!-- =================================================
              HUD
-        ====================================== -->
+        ================================================== -->
         <div class="hud">
 
-            <div class="hud-item score-hud">
-                <span class="hud-label">SCORE</span>
-                <strong id="score">0</strong>
+            <div class="hud-item">
+
+                <span class="hud-label">
+                    SCORE
+                </span>
+
+                <strong id="score">
+                    0
+                </strong>
+
             </div>
 
-            <div class="hud-divider"></div>
 
-            <div class="hud-item miss-hud">
-                <span class="hud-label">MISS</span>
-                <strong id="miss">0</strong>
-                <small>×</small>
+            <div class="hud-item miss">
+
+                <span class="hud-label">
+                    MISS
+                </span>
+
+                <strong id="miss">
+                    0
+                </strong>
+
             </div>
 
-            <div class="hud-divider"></div>
 
-            <div class="hud-item combo-hud">
-                <span class="hud-label">COMBO</span>
-                <strong id="combo">0</strong>
+            <div class="hud-item">
+
+                <span class="hud-label">
+                    COMBO
+                </span>
+
+                <strong id="combo">
+                    0
+                </strong>
+
             </div>
 
-            <div class="hud-divider"></div>
 
-            <div class="hud-item accuracy-hud">
-                <span class="hud-label">ACCURACY</span>
-                <strong id="accuracy">100.0<small>%</small></strong>
+            <div class="hud-item">
+
+                <span class="hud-label">
+                    ACCURACY
+                </span>
+
+                <strong id="accuracy">
+                    100.0%
+                </strong>
+
             </div>
 
-            <div class="hud-divider"></div>
 
-            <div class="progress-hud">
+            <div class="hud-item progress-hud">
 
-                <div class="progress-title">
-                    <span>PROGRESS</span>
-                    <strong id="progress-percent">0%</strong>
+                <div class="progress-top">
+
+                    <span class="hud-label">
+                        PROGRESS
+                    </span>
+
+                    <strong id="progress-percent">
+                        0%
+                    </strong>
+
                 </div>
 
+
                 <div class="progress-bar">
+
                     <div
                         id="progress-fill"
                         class="progress-fill"
-                        style="width: 0%;"
                     ></div>
+
                 </div>
 
+
                 <div class="progress-count">
-                    <span id="progress-current">0</span>
-                    /
-                    <span id="progress-total">0</span>
-                    文字
+
+                    <span id="progress-current">
+                        0
+                    </span>
+
+                    <span>/</span>
+
+                    <span id="progress-total">
+                        0
+                    </span>
+
                 </div>
 
             </div>
@@ -323,183 +390,232 @@
     </section>
 
 
-    <!-- =========================================
+    <!-- =====================================================
          MISS EFFECT
-    ========================================== -->
-    <div id="miss-effect" class="side-effect miss-effect">
-        MISS!
+    ====================================================== -->
+    <div
+        id="miss-effect"
+        class="miss-effect"
+    >
+        MISS
     </div>
 
-    <div id="boost-effect" class="side-effect boost-effect">
+
+    <!-- =====================================================
+         BOOST EFFECT
+    ====================================================== -->
+    <div
+        id="boost-effect"
+        class="boost-effect"
+    >
         BOOST!
     </div>
 
 
-    <!-- =========================================
+    <!-- =====================================================
          COUNTDOWN
-    ========================================== -->
+    ====================================================== -->
     <div
         id="countdown-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay countdown-overlay hidden"
     >
-        <div class="countdown-frame">
-            <div class="countdown-label">READY</div>
-            <div id="countdown" class="countdown">3</div>
-            <div class="countdown-sub">GET READY!</div>
+
+        <div
+            id="countdown"
+            class="countdown"
+        >
+            3
         </div>
+
     </div>
 
 
-    <!-- =========================================
+    <!-- =====================================================
          ERROR
-    ========================================== -->
+    ====================================================== -->
     <div
         id="error-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay hidden"
     >
-        <div class="modal">
 
-            <div class="modal-title">ERROR</div>
+        <div class="modal error-modal">
+
+            <div class="modal-title">
+                ERROR
+            </div>
 
             <div
                 id="error-message"
                 class="modal-message"
             >
-                エラーが発生しました。
+                データを読み込めませんでした。
             </div>
 
             <button
                 id="error-reload-button"
-                class="modal-button"
-                type="button"
+                class="primary-button"
             >
                 RELOAD
             </button>
 
         </div>
+
     </div>
 
 
-    <!-- =========================================
+    <!-- =====================================================
          SECTION RESULT
-    ========================================== -->
+    ====================================================== -->
     <div
         id="result-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay hidden"
     >
+
         <div class="modal result-modal">
 
-            <div class="result-title">
-                SECTION CLEAR
+            <div class="modal-kicker">
+                SECTION COMPLETE
             </div>
 
-            <div class="result-subtitle">
-                区間クリア
+            <div class="modal-title">
+                SECTION RESULT
             </div>
 
-            <div class="result-label">
-                SECTION TIME
+
+            <div class="result-time-block">
+
+                <span>
+                    TIME
+                </span>
+
+                <strong id="result-time">
+                    00:00.000
+                </strong>
+
             </div>
 
-            <div
-                id="result-time"
-                class="result-time"
+
+            <div class="result-grid">
+
+                <div>
+                    <span>
+                        SCORE
+                    </span>
+
+                    <strong id="result-score">
+                        0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        MISS
+                    </span>
+
+                    <strong id="result-miss">
+                        0
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <button
+                id="result-next-button"
+                class="primary-button"
             >
-                00:00.000
-            </div>
-
-            <div class="result-stats">
-
-                <div>
-                    <span>SCORE</span>
-                    <strong id="result-score">0</strong>
-                </div>
-
-                <div>
-                    <span>MISS</span>
-                    <strong id="result-miss">0</strong>
-                </div>
-
-            </div>
+                NEXT SECTION
+            </button>
 
         </div>
+
     </div>
 
 
-    <!-- =========================================
-         FINAL
-    ========================================== -->
+    <!-- =====================================================
+         FINAL RESULT
+    ====================================================== -->
     <div
         id="final-overlay"
-        class="overlay"
-        aria-hidden="true"
+        class="overlay hidden"
     >
-        <div class="modal result-modal final-modal">
 
-            <div class="result-title">
+        <div class="modal final-modal">
+
+            <div class="modal-kicker">
+                RACE COMPLETE
+            </div>
+
+            <div class="modal-title">
                 FINISH!
             </div>
 
-            <div class="result-subtitle">
-                KIR RECREATION TOURNAMENT 2026
+
+            <div class="final-time">
+
+                <span>
+                    TOTAL TIME
+                </span>
+
+                <strong id="final-time">
+                    00:00.000
+                </strong>
+
             </div>
 
-            <div class="result-label">
-                TOTAL TIME
-            </div>
 
-            <div
-                id="final-time"
-                class="result-time"
-            >
-                00:00.000
-            </div>
-
-            <div class="result-stats">
+            <div class="result-grid">
 
                 <div>
-                    <span>SCORE</span>
-                    <strong id="final-score">0</strong>
+                    <span>
+                        TOTAL SCORE
+                    </span>
+
+                    <strong id="final-score">
+                        0
+                    </strong>
                 </div>
 
                 <div>
-                    <span>MISS</span>
-                    <strong id="final-miss">0</strong>
+                    <span>
+                        TOTAL MISS
+                    </span>
+
+                    <strong id="final-miss">
+                        0
+                    </strong>
                 </div>
 
             </div>
+
 
             <button
                 id="restart-button"
-                class="modal-button"
-                type="button"
+                class="primary-button"
             >
                 PLAY AGAIN
             </button>
 
         </div>
+
     </div>
 
 
-    <!-- =========================================
-         HIDDEN TYPING INPUT
-    ========================================== -->
+    <!-- =====================================================
+         HIDDEN INPUT
+    ====================================================== -->
     <input
         id="typing-input"
-        class="typing-input-hidden"
         type="text"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
         spellcheck="false"
-        tabindex="-1"
-        aria-label="Typing input"
-    />
+        aria-hidden="true"
+    >
 
 </main>
+
 
 <script src="js/game.js"></script>
 
