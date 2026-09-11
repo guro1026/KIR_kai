@@ -667,43 +667,6 @@ body {
 
 
 /* =========================================================
-   ROMAJI PROGRESS
-   ========================================================= */
-
-.romaji-progress {
-    margin-top: 10px;
-
-    padding: 0 2px;
-
-    font-family:
-        "Consolas",
-        "Courier New",
-        monospace;
-
-    font-size: 17px;
-
-    letter-spacing: 0.04em;
-
-    white-space: pre-wrap;
-
-    word-break: break-all;
-}
-
-
-.romaji-progress .romaji-typed {
-    color: #4fd8a6;
-
-    text-shadow:
-        0 0 8px rgba(79, 216, 166, 0.45);
-}
-
-
-.romaji-progress .romaji-rest {
-    color: #4c6b80;
-}
-
-
-/* =========================================================
    HUD
    ========================================================= */
 
