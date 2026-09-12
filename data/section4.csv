@@ -1,8 +1,11 @@
 question_no,section,genre,display,answer
-1,4,プログラミングタイピング①,"const vision = ""Keep it real"";","const vision = ""Keep it real"";"
-2,4,プログラミングタイピング①,"function greet(name) { return `Hello, ${name}!`; }","function greet(name) { return `Hello, ${name}!`; }"
-3,4,プログラミングタイピング①,"const skills = { linux: true, cloud: true, network: true, ai: true };","const skills = { linux: true, cloud: true, network: true, ai: true };"
-4,4,プログラミングタイピング①,"for (const [key, value] of Object.entries(skills)) { console.log(`${key}: ${value}`); }","for (const [key, value] of Object.entries(skills)) { console.log(`${key}: ${value}`); }"
-5,4,プログラミングタイピング①,".kir-card { display: grid; gap: 16px; padding: 24px; border: 1px solid #ddd; }",".kir-card { display: grid; gap: 16px; padding: 24px; border: 1px solid #ddd; }"
-6,4,プログラミングタイピング①,"git checkout -b feature/kir-event && git add . && git commit -m ""add event rule"";","git checkout -b feature/kir-event && git add . && git commit -m ""add event rule"";"
-7,4,プログラミングタイピング①,"curl -X GET ""https://example.com/api/members?team=kir"" -H ""Accept: application/json"";","curl -X GET ""https://example.com/api/members?team=kir"" -H ""Accept: application/json"";"
+1,4,Git,git status,git status
+2,4,Git,git branch --show-current,git branch --show-current
+3,4,Git,git pull origin main,git pull origin main
+4,4,Git,git log --oneline -5,git log --oneline -5
+5,4,Docker,docker ps,docker ps
+6,4,Docker,docker images,docker images
+7,4,Docker,docker exec -it kir-app /bin/sh,docker exec -it kir-app /bin/sh
+8,4,Docker,docker logs --tail 50 kir-app,docker logs --tail 50 kir-app
+9,4,HTTP・確認系,curl -s https://example.com/api/status | jq .,curl -s https://example.com/api/status | jq .
+10,4,HTTP・確認系,curl -I https://example.com,curl -I https://example.com
