@@ -1242,14 +1242,25 @@ function updateRomajiProgress() {
         state.currentPosition;
 
 
+    /*
+     * -----------------------------------------------
+     * answerが空の場合
+     * -----------------------------------------------
+     */
+
     if (!answer) {
 
-        DOM.romajiProgress.textContent =
-            "";
+        DOM.romajiProgress.textContent = "";
 
         return;
     }
 
+
+    /*
+     * -----------------------------------------------
+     * 入力済み
+     * -----------------------------------------------
+     */
 
     const typed =
         answer.slice(
@@ -1257,24 +1268,103 @@ function updateRomajiProgress() {
             position
         );
 
+
+    /*
+     * -----------------------------------------------
+     * 現在入力する1文字
+     * -----------------------------------------------
+     */
+
+    const current =
+        answer.charAt(position);
+
+
+    /*
+     * -----------------------------------------------
+     * これから入力する文字
+     * -----------------------------------------------
+     */
+
     const remaining =
         answer.slice(
-            position
+            position + 1
         );
 
 
     /*
-     * HTMLを使わず安全に表示。
+     * -----------------------------------------------
+     * HTMLとして組み立てる
      *
-     * CSS側で色を変えたい場合は
-     * innerHTML版に変更可能だが、
-     * まずは確実に動くtextContent方式。
+     * textContentを使わず、
+     * 各部分をspanで分離する。
+     * -----------------------------------------------
      */
 
-    DOM.romajiProgress.textContent =
-        typed + remaining;
-}
+    DOM.romajiProgress.innerHTML = "";
 
+
+    /*
+     * 入力済み
+     */
+
+    if (typed) {
+
+        const typedSpan =
+            document.createElement("span");
+
+        typedSpan.className =
+            "typed";
+
+        typedSpan.textContent =
+            typed;
+
+        DOM.romajiProgress.appendChild(
+            typedSpan
+        );
+    }
+
+
+    /*
+     * 現在入力する文字
+     */
+
+    if (current) {
+
+        const currentSpan =
+            document.createElement("span");
+
+        currentSpan.className =
+            "current";
+
+        currentSpan.textContent =
+            current;
+
+        DOM.romajiProgress.appendChild(
+            currentSpan
+        );
+    }
+
+
+    /*
+     * 未入力
+     */
+
+    if (remaining) {
+
+        const remainingSpan =
+            document.createElement("span");
+
+        remainingSpan.className =
+            "remaining";
+
+        remainingSpan.textContent =
+            remaining;
+
+        DOM.romajiProgress.appendChild(
+            remainingSpan
+        );
+    }
+}
 
 /* =========================================================
    CHARACTER CHECK
