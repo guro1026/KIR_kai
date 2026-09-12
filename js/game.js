@@ -1,21 +1,10 @@
 /* =========================================================
    KIR RECREATION TOURNAMENT 2026
    めちゃむずキーボード早打ち駅伝
-
-   完全版 game.js
-
-   CSV仕様
-   ---------------------------------------------------------
-   question_no,section,title,display,answer
-
-   display
-   → 画面に表示するお題
-
-   answer
-   → プレイヤーが入力するローマ字
 ========================================================= */
 
 "use strict";
+
 
 /* =========================================================
    CONFIG
@@ -23,7 +12,14 @@
 
 const GAME_ID = "KIR-KAI-2026";
 
-const VALID_TEAMS = ["A", "B", "C", "D", "E", "F"];
+const VALID_TEAMS = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F"
+];
 
 const SECTION_FILES = [
     "data/section1.csv",
@@ -34,26 +30,41 @@ const SECTION_FILES = [
     "data/section6.csv"
 ];
 
+
+/* COUNTDOWN */
+
 const COUNTDOWN_STEP = 1000;
 
-/*
- * 問題クリア後、次の問題へ移るまで
- */
+
+/* QUESTION */
+
 const NEXT_QUESTION_DELAY = 200;
 
-/*
- * セクション切り替え時の待機
- */
+
+/* SECTION RESULT */
+
 const NEXT_SECTION_DELAY = 500;
+
+
+/* SECTION TIME */
+
+const MAX_SECTION_TIME = 150000;
+
+
+/* HANDOFF */
+
+const HANDOFF_TIME = 30000;
+
 
 
 /* =========================================================
    DOM HELPER
 ========================================================= */
 
-function $(id) {
-    return document.getElementById(id);
+function $(selector) {
+    return document.querySelector(selector);
 }
+
 
 
 /* =========================================================
@@ -61,57 +72,175 @@ function $(id) {
 ========================================================= */
 
 const DOM = {
-    sectionNumber: $("section-number"),
-    teamName: $("team-name"),
-    timer: $("timer"),
 
-    runner: $("runner"),
-    runnerImage: $("runner-image"),
-    finishFlag: $("finish-flag"),
+    titleOverlay:
+        $("title-overlay"),
 
-    questionNumber: $("question-number"),
-    questionText: $("question-text"),
-    romajiProgress: $("romaji-progress"),
+    titleEvent:
+        $(".title-event"),
 
-    score: $("score"),
-    miss: $("miss"),
-    combo: $("combo"),
-    comboSideValue: $("combo-side-value"),
-    accuracy: $("accuracy"),
+    titleMain:
+        $(".title-main"),
 
-    progressPercent: $("progress-percent"),
-    progressFill: $("progress-fill"),
-    progressCurrent: $("progress-current"),
-    progressTotal: $("progress-total"),
+    titleSub:
+        $(".title-sub"),
 
-    goodEffect: $("good-effect"),
-    missEffect: $("miss-effect"),
-    boostEffect: $("boost-effect"),
+    titleMessage:
+        $(".title-message"),
 
-    countdownOverlay: $("countdown-overlay"),
-    countdown: $("countdown"),
 
-    errorOverlay: $("error-overlay"),
-    errorMessage: $("error-message"),
-    errorReloadButton: $("error-reload-button"),
+    sectionStartOverlay:
+        $("section-start-overlay"),
 
-    resultOverlay: $("result-overlay"),
-    resultTime: $("result-time"),
-    resultScore: $("result-score"),
-    resultMiss: $("result-miss"),
-    resultNextButton: $("result-next-button"),
+    sectionStartNumber:
+        $("section-start-number"),
 
-    finalOverlay: $("final-overlay"),
-    finalTime: $("final-time"),
-    finalScore: $("final-score"),
-    finalMiss: $("final-miss"),
-    restartButton: $("restart-button"),
+    sectionStartJapanese:
+        $("section-start-japanese"),
 
-    typingInput: $("typing-input"),
+    sectionStartTeam:
+        $("section-start-team"),
 
-    teamButtons: document.querySelectorAll(".team-select"),
-    keys: document.querySelectorAll(".key")
+    sectionStartPlayer:
+        $("section-start-player"),
+
+    sectionStartPress:
+        $("section-start-press"),
+
+
+    sectionNumber:
+        $("section-number"),
+
+    teamName:
+        $("team-name"),
+
+    timer:
+        $("timer"),
+
+
+    runner:
+        $("runner"),
+
+    runnerImage:
+        $("runner-image"),
+
+    finishFlag:
+        $("finish-flag"),
+
+
+    questionNumber:
+        $("question-number"),
+
+    questionText:
+        $("question-text"),
+
+    romajiProgress:
+        $("romaji-progress"),
+
+
+    score:
+        $("score"),
+
+    miss:
+        $("miss"),
+
+    combo:
+        $("combo"),
+
+    comboSideValue:
+        $("combo-side-value"),
+
+    accuracy:
+        $("accuracy"),
+
+
+    progressPercent:
+        $("progress-percent"),
+
+    progressFill:
+        $("progress-fill"),
+
+    progressCurrent:
+        $("progress-current"),
+
+    progressTotal:
+        $("progress-total"),
+
+
+    goodEffect:
+        $("good-effect"),
+
+    missEffect:
+        $("miss-effect"),
+
+    boostEffect:
+        $("boost-effect"),
+
+
+    countdownOverlay:
+        $("countdown-overlay"),
+
+    countdown:
+        $("countdown"),
+
+
+    errorOverlay:
+        $("error-overlay"),
+
+    errorMessage:
+        $("error-message"),
+
+    errorReloadButton:
+        $("error-reload-button"),
+
+
+    resultOverlay:
+        $("result-overlay"),
+
+    resultSectionLabel:
+        $("result-section-label"),
+
+    resultTime:
+        $("result-time"),
+
+    resultScore:
+        $("result-score"),
+
+    resultMiss:
+        $("result-miss"),
+
+    resultNextMessage:
+        $("result-next-message"),
+
+
+    finalOverlay:
+        $("final-overlay"),
+
+    finalTime:
+        $("final-time"),
+
+    finalScore:
+        $("final-score"),
+
+    finalMiss:
+        $("final-miss"),
+
+    restartButton:
+        $("restart-button"),
+
+
+    typingInput:
+        $("typing-input"),
+
+
+    teamButtons:
+        document.querySelectorAll(".team-select"),
+
+    keys:
+        document.querySelectorAll(".key")
+
 };
+
 
 
 /* =========================================================
@@ -122,39 +251,34 @@ const state = {
 
     initialized: false,
 
-    /* -------------------------
-       Team
-    ------------------------- */
+
+    /* TEAM */
 
     team: "A",
 
-    /* -------------------------
-       CSV
-    ------------------------- */
+
+    /* DATA */
 
     sectionsData: [],
 
-    /* -------------------------
-       Section
-    ------------------------- */
+
+    /* CURRENT SECTION */
 
     currentSection: 0,
 
     sectionQuestions: [],
 
-    currentQuestionIndex: 0,
 
-    /* -------------------------
-       Current Question
-    ------------------------- */
+    /* CURRENT QUESTION */
+
+    currentQuestionIndex: 0,
 
     currentAnswer: "",
 
     currentPosition: 0,
 
-    /* -------------------------
-       Current Section Score
-    ------------------------- */
+
+    /* SECTION SCORE */
 
     score: 0,
 
@@ -162,62 +286,88 @@ const state = {
 
     combo: 0,
 
-    /* -------------------------
-       Total Race Score
-    ------------------------- */
+
+    /* TOTAL SCORE */
 
     totalScore: 0,
 
     totalMiss: 0,
 
-    /* -------------------------
-       Progress
-    ------------------------- */
+
+    /* PROGRESS */
 
     sectionTotalChars: 0,
 
     sectionCharsTyped: 0,
 
-    /* -------------------------
-       Timer
-    ------------------------- */
+
+    /* SECTION TIMER */
 
     sectionStartTime: 0,
 
-    sectionTimes: [],
+    sectionElapsed: 0,
 
     timerInterval: null,
 
-    /* -------------------------
-       Game Status
-    ------------------------- */
+
+    /* SECTION TIMES */
+
+    sectionTimes: [],
+
+
+    /* GAME STATUS */
 
     gameStarted: false,
 
+    sectionActive: false,
+
     sectionFinished: false,
 
-    processingAnswer: false,
+
+    /* TITLE */
+
+    titleScreen: true,
+
+
+    /* DATA */
+
+    dataReady: false,
+
+
+    /* COUNTDOWN */
 
     countdownRunning: false,
 
+
+    /* HANDOFF */
+
+    handoffRunning: false,
+
+
+    /* ANSWER */
+
+    processingAnswer: false,
+
+
+    /* FINAL */
+
     finalFinished: false
+
 };
+
 
 
 /* =========================================================
    INITIALIZE
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded", initialize);
+document.addEventListener(
+    "DOMContentLoaded",
+    initialize
+);
 
 
-function initialize() {
-
-    if (state.initialized) {
-        return;
-    }
-
-    state.initialized = true;
+async function initialize() {
 
     try {
 
@@ -231,18 +381,25 @@ function initialize() {
 
         resetWholeGame();
 
-        loadAllSections();
+        await loadAllSections();
 
-    } catch (error) {
+        state.initialized = true;
+
+    }
+
+    catch (error) {
 
         console.error(error);
 
         showError(
             error.message ||
-            "ゲームを初期化できませんでした。"
+            "ゲームの初期化に失敗しました。"
         );
+
     }
+
 }
+
 
 
 /* =========================================================
@@ -251,63 +408,131 @@ function initialize() {
 
 function checkDOM() {
 
-    const required = {
+    const required = [
 
-        sectionNumber: DOM.sectionNumber,
-        teamName: DOM.teamName,
-        timer: DOM.timer,
+        ["title-overlay", DOM.titleOverlay],
+        ["title-message", DOM.titleMessage],
 
-        runner: DOM.runner,
-        runnerImage: DOM.runnerImage,
+        [
+            "section-start-overlay",
+            DOM.sectionStartOverlay
+        ],
 
-        questionNumber: DOM.questionNumber,
-        questionText: DOM.questionText,
-        romajiProgress: DOM.romajiProgress,
+        [
+            "section-start-number",
+            DOM.sectionStartNumber
+        ],
 
-        score: DOM.score,
-        miss: DOM.miss,
-        combo: DOM.combo,
-        accuracy: DOM.accuracy,
+        [
+            "section-start-japanese",
+            DOM.sectionStartJapanese
+        ],
 
-        progressPercent: DOM.progressPercent,
-        progressFill: DOM.progressFill,
-        progressCurrent: DOM.progressCurrent,
-        progressTotal: DOM.progressTotal,
+        [
+            "section-start-team",
+            DOM.sectionStartTeam
+        ],
 
-        countdownOverlay: DOM.countdownOverlay,
-        countdown: DOM.countdown,
+        [
+            "section-start-player",
+            DOM.sectionStartPlayer
+        ],
 
-        errorOverlay: DOM.errorOverlay,
-        errorMessage: DOM.errorMessage,
-        errorReloadButton: DOM.errorReloadButton,
+        [
+            "section-start-press",
+            DOM.sectionStartPress
+        ],
 
-        resultOverlay: DOM.resultOverlay,
-        resultTime: DOM.resultTime,
-        resultScore: DOM.resultScore,
-        resultMiss: DOM.resultMiss,
-        resultNextButton: DOM.resultNextButton,
 
-        finalOverlay: DOM.finalOverlay,
-        finalTime: DOM.finalTime,
-        finalScore: DOM.finalScore,
-        finalMiss: DOM.finalMiss,
-        restartButton: DOM.restartButton,
+        ["section-number", DOM.sectionNumber],
+        ["team-name", DOM.teamName],
+        ["timer", DOM.timer],
 
-        typingInput: DOM.typingInput
-    };
 
-    const missing = Object.entries(required)
-        .filter(([, element]) => !element)
-        .map(([name]) => name);
+        ["runner", DOM.runner],
+        ["runner-image", DOM.runnerImage],
+        ["finish-flag", DOM.finishFlag],
 
-    if (missing.length > 0) {
+
+        ["question-number", DOM.questionNumber],
+        ["question-text", DOM.questionText],
+        ["romaji-progress", DOM.romajiProgress],
+
+
+        ["score", DOM.score],
+        ["miss", DOM.miss],
+        ["combo", DOM.combo],
+        ["combo-side-value", DOM.comboSideValue],
+        ["accuracy", DOM.accuracy],
+
+
+        ["progress-percent", DOM.progressPercent],
+        ["progress-fill", DOM.progressFill],
+        ["progress-current", DOM.progressCurrent],
+        ["progress-total", DOM.progressTotal],
+
+
+        ["good-effect", DOM.goodEffect],
+        ["miss-effect", DOM.missEffect],
+        ["boost-effect", DOM.boostEffect],
+
+
+        ["countdown-overlay", DOM.countdownOverlay],
+        ["countdown", DOM.countdown],
+
+
+        ["error-overlay", DOM.errorOverlay],
+        ["error-message", DOM.errorMessage],
+        ["error-reload-button", DOM.errorReloadButton],
+
+
+        ["result-overlay", DOM.resultOverlay],
+        ["result-section-label", DOM.resultSectionLabel],
+        ["result-time", DOM.resultTime],
+        ["result-score", DOM.resultScore],
+        ["result-miss", DOM.resultMiss],
+
+
+        ["final-overlay", DOM.finalOverlay],
+        ["final-time", DOM.finalTime],
+        ["final-score", DOM.finalScore],
+        ["final-miss", DOM.finalMiss],
+        ["restart-button", DOM.restartButton],
+
+
+        ["typing-input", DOM.typingInput]
+
+    ];
+
+
+    for (
+        const [name, element]
+        of required
+    ) {
+
+        if (!element) {
+
+            throw new Error(
+                `HTML要素が見つかりません: ${name}`
+            );
+
+        }
+
+    }
+
+
+    if (
+        DOM.teamButtons.length === 0
+    ) {
 
         throw new Error(
-            "HTMLに必要な要素がありません: " +
-            missing.join(", ")
+            "TEAM SELECTボタンがありません。"
         );
+
     }
+
 }
+
 
 
 /* =========================================================
@@ -316,108 +541,72 @@ function checkDOM() {
 
 function bindEvents() {
 
+
     document.addEventListener(
         "keydown",
         handleKeyDown
     );
 
 
-    /* -------------------------
-       Team Buttons
-    ------------------------- */
+    DOM.teamButtons.forEach(
+        button => {
 
-    DOM.teamButtons.forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
 
-        button.addEventListener("click", () => {
+                    if (
+                        state.sectionActive ||
+                        state.countdownRunning ||
+                        state.handoffRunning ||
+                        state.gameStarted
+                    ) {
 
-            const team =
-                String(button.dataset.team || "")
-                    .toUpperCase();
+                        return;
 
-            if (!VALID_TEAMS.includes(team)) {
-                return;
-            }
-
-            if (
-                state.gameStarted ||
-                state.countdownRunning
-            ) {
-                return;
-            }
-
-            state.team = team;
-
-            applyTeam();
-
-            updateTeamButtons();
-
-            updateURLTeam(team);
-        });
-    });
+                    }
 
 
-    /* -------------------------
-       Result
-    ------------------------- */
+                    const team =
+                        button.dataset.team;
 
-    DOM.resultNextButton.addEventListener(
-        "click",
-        handleResultNext
+
+                    if (
+                        VALID_TEAMS.includes(team)
+                    ) {
+
+                        state.team =
+                            team;
+
+                        applyTeam();
+
+                        updateSectionStartScreen();
+
+                    }
+
+                }
+            );
+
+        }
     );
 
-
-    /* -------------------------
-       Restart
-    ------------------------- */
 
     DOM.restartButton.addEventListener(
         "click",
         () => {
-            location.reload();
+
+            window.location.reload();
+
         }
     );
 
-
-    /* -------------------------
-       Error Reload
-    ------------------------- */
 
     DOM.errorReloadButton.addEventListener(
         "click",
         () => {
-            location.reload();
-        }
-    );
 
+            window.location.reload();
 
-    /* -------------------------
-       Blur
-    ------------------------- */
-
-    window.addEventListener(
-        "blur",
-        clearPressedKeys
-    );
-
-
-    /* -------------------------
-       Hidden Input
-       クリックされた場合も
-       キーボード入力を受けられるようにする
-    ------------------------- */
-
-    DOM.typingInput.addEventListener(
-        "blur",
-        () => {
-            if (
-                state.gameStarted &&
-                !state.sectionFinished
-            ) {
-                setTimeout(
-                    focusTypingInput,
-                    0
-                );
-            }
         }
     );
 
@@ -426,11 +615,38 @@ function bindEvents() {
         "input",
         handleInput
     );
+
+
+    window.addEventListener(
+        "blur",
+        clearPressedKeys
+    );
+
+
+    DOM.typingInput.addEventListener(
+        "blur",
+        () => {
+
+            if (
+                state.gameStarted
+            ) {
+
+                setTimeout(
+                    focusTypingInput,
+                    0
+                );
+
+            }
+
+        }
+    );
+
 }
 
 
+
 /* =========================================================
-   KEYBOARD INPUT
+   KEY DOWN
 ========================================================= */
 
 function handleKeyDown(event) {
@@ -440,163 +656,229 @@ function handleKeyDown(event) {
         event.altKey ||
         event.metaKey
     ) {
+
         return;
+
     }
 
 
-    /* -------------------------
-       Enter
-    ------------------------- */
+    /* =====================================================
+       ENTER
+    ===================================================== */
 
-    if (event.key === "Enter") {
+    if (
+        event.key === "Enter"
+    ) {
 
         event.preventDefault();
 
-        if (state.finalFinished) {
 
-            location.reload();
+        /* FINAL */
+
+        if (
+            state.finalFinished
+        ) {
+
+            window.location.reload();
 
             return;
+
         }
 
 
+        /* TITLE */
+
         if (
-            !state.gameStarted &&
+            state.titleScreen
+        ) {
+
+            if (
+                !state.dataReady ||
+                state.countdownRunning
+            ) {
+
+                return;
+
+            }
+
+
+            state.titleScreen =
+                false;
+
+
+            hideTitleScreen();
+
+
+            showSectionStartScreen();
+
+            return;
+
+        }
+
+
+        /* SECTION START */
+
+        if (
+            !state.sectionActive &&
+            !state.sectionFinished &&
             !state.countdownRunning &&
-            !state.sectionFinished
+            !state.handoffRunning
         ) {
 
             startCountdown();
 
             return;
+
         }
 
 
-        if (state.sectionFinished) {
-
-            handleResultNext();
-
-            return;
-        }
-
         return;
+
     }
 
 
-    /* -------------------------
-       Game Start前
-    ------------------------- */
+
+    /* =====================================================
+       TYPING
+    ===================================================== */
 
     if (
         !state.gameStarted ||
+        !state.sectionActive ||
         state.sectionFinished ||
-        state.processingAnswer ||
-        state.countdownRunning
-    ) {
-        return;
-    }
-
-
-    /*
-     * 日本語IME等による入力を避けるため、
-     * ここでは1文字キーだけ処理する。
-     */
-    if (
-        typeof event.key !== "string" ||
-        event.key.length !== 1
-    ) {
-        return;
-    }
-
-
-    /*
-     * typing-input にフォーカスしている場合、
-     * inputイベント側でも処理されるため、
-     * ここでは直接判定する。
-     */
-    flashPressedKey(
-        normalizeInputCharacter(event.key)
-    );
-
-    checkCharacter(
-        normalizeInputCharacter(event.key)
-    );
-}
-
-
-/* =========================================================
-   INPUT EVENT
-========================================================= */
-
-/*
- * hidden / visible input をHTML側に置いている場合にも
- * 動作するようにしてある。
- *
- * ただし二重入力を防ぐため、
- * keydownで処理した場合は基本的に
- * input側の文字をクリアする。
- */
-
-function handleInput(event) {
-
-    if (
-        !state.gameStarted ||
-        state.sectionFinished ||
+        state.countdownRunning ||
+        state.handoffRunning ||
         state.processingAnswer
     ) {
-        event.target.value = "";
+
         return;
+
     }
 
-    const value = event.target.value;
 
-    if (!value) {
-        return;
-    }
+    const key =
+        normalizeCharacter(
+            event.key
+        );
 
-    /*
-     * 入力された文字を1文字ずつ処理
-     */
-    for (const char of value) {
-
-        const normalized =
-            normalizeInputCharacter(char);
-
-        if (normalized) {
-
-            flashPressedKey(normalized);
-
-            checkCharacter(normalized);
-        }
-    }
-
-    event.target.value = "";
-}
-
-
-/* =========================================================
-   INPUT NORMALIZE
-========================================================= */
-
-function normalizeInputCharacter(char) {
 
     if (
-        typeof char !== "string" ||
-        char.length === 0
+        key === ""
     ) {
-        return "";
+
+        return;
+
     }
 
-    /*
-     * 英字は小文字に統一。
-     * CSV answerも小文字前提。
-     */
-    return char.toLowerCase();
+
+    flashPressedKey(key);
+
+    checkCharacter(key);
+
 }
 
 
+
 /* =========================================================
-   TEAM
+   INPUT
+========================================================= */
+
+function handleInput() {
+
+    if (
+        !state.gameStarted ||
+        !state.sectionActive ||
+        state.sectionFinished ||
+        state.countdownRunning ||
+        state.handoffRunning ||
+        state.processingAnswer
+    ) {
+
+        DOM.typingInput.value = "";
+
+        return;
+
+    }
+
+
+    const value =
+        DOM.typingInput.value;
+
+
+    if (
+        !value
+    ) {
+
+        return;
+
+    }
+
+
+    for (
+        const character of value
+    ) {
+
+        const key =
+            normalizeCharacter(
+                character
+            );
+
+
+        if (
+            !key
+        ) {
+
+            continue;
+
+        }
+
+
+        flashPressedKey(key);
+
+        checkCharacter(key);
+
+
+        if (
+            state.processingAnswer ||
+            !state.gameStarted
+        ) {
+
+            break;
+
+        }
+
+    }
+
+
+    DOM.typingInput.value = "";
+
+}
+
+
+
+/* =========================================================
+   NORMALIZE
+========================================================= */
+
+function normalizeCharacter(character) {
+
+    if (
+        typeof character !== "string"
+    ) {
+
+        return "";
+
+    }
+
+
+    return character.toLowerCase();
+
+}
+
+
+
+/* =========================================================
+   TEAM FROM URL
 ========================================================= */
 
 function readTeamFromURL() {
@@ -606,71 +888,66 @@ function readTeamFromURL() {
             window.location.search
         );
 
-    const urlTeam =
-        String(
-            params.get("team") || ""
+
+    const team =
+        (
+            params.get("team") ||
+            "A"
         ).toUpperCase();
 
+
     if (
-        VALID_TEAMS.includes(urlTeam)
+        VALID_TEAMS.includes(team)
     ) {
 
-        state.team = urlTeam;
+        state.team =
+            team;
 
-    } else {
-
-        state.team = "A";
     }
+
 }
 
 
-function updateURLTeam(team) {
 
-    const url =
-        new URL(
-            window.location.href
-        );
-
-    url.searchParams.set(
-        "team",
-        team
-    );
-
-    window.history.replaceState(
-        {},
-        "",
-        url
-    );
-}
-
+/* =========================================================
+   APPLY TEAM
+========================================================= */
 
 function applyTeam() {
 
-    const team = state.team;
+    const team =
+        state.team;
+
 
     DOM.teamName.textContent =
         `TEAM ${team}`;
 
+
     DOM.runnerImage.src =
         `img/character/${team}team.png`;
+
 
     DOM.runnerImage.alt =
         `Team ${team}`;
 
-    updateTeamButtons();
+
+    DOM.teamButtons.forEach(
+        button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.team === team
+            );
+
+        }
+    );
+
+
+
+    updateSectionStartScreen();
+
 }
 
-
-function updateTeamButtons() {
-
-    DOM.teamButtons.forEach(button => {
-
-        button.classList.toggle(
-            "active",
-            button.dataset.team === state.team
-        );
-    });
-}
 
 
 /* =========================================================
@@ -681,11 +958,13 @@ function resetWholeGame() {
 
     stopTimer();
 
-    state.sectionsData = [];
+    clearPressedKeys();
+
 
     state.currentSection = 0;
 
     state.sectionQuestions = [];
+
 
     state.currentQuestionIndex = 0;
 
@@ -693,143 +972,158 @@ function resetWholeGame() {
 
     state.currentPosition = 0;
 
+
     state.score = 0;
 
     state.miss = 0;
 
     state.combo = 0;
 
+
     state.totalScore = 0;
 
     state.totalMiss = 0;
+
 
     state.sectionTotalChars = 0;
 
     state.sectionCharsTyped = 0;
 
+
     state.sectionStartTime = 0;
+
+    state.sectionElapsed = 0;
+
 
     state.sectionTimes = [];
 
+
     state.gameStarted = false;
+
+    state.sectionActive = false;
 
     state.sectionFinished = false;
 
-    state.processingAnswer = false;
+
+    state.titleScreen = true;
+
+    state.dataReady = false;
+
 
     state.countdownRunning = false;
+
+    state.handoffRunning = false;
+
+    state.processingAnswer = false;
 
     state.finalFinished = false;
 
 
-    DOM.sectionNumber.textContent = "1";
+    hideAllOverlays();
 
-    DOM.timer.textContent =
-        "00:00.000";
+    showTitleScreen();
 
-    DOM.questionNumber.textContent =
-        "1 / 1";
+
+    DOM.titleMessage.textContent =
+        "LOADING...";
+
 
     DOM.questionText.textContent =
         "LOADING...";
+
 
     DOM.romajiProgress.textContent =
         "";
 
-    if (DOM.typingInput) {
-        DOM.typingInput.value = "";
-    }
+
+    DOM.timer.textContent =
+        "00:00.000";
+
 
     updateHUD();
 
-    updateProgress();
-
-    resetRunner();
-
-    hideAllOverlays();
-
-    document.body.classList.add("ready");
 }
 
 
+
 /* =========================================================
-   CSV LOAD
+   LOAD CSV
 ========================================================= */
 
 async function loadAllSections() {
 
-    DOM.questionText.textContent =
-        "LOADING...";
-
     const loadedSections = [];
 
 
-    try {
+    for (
+        let index = 0;
+        index < SECTION_FILES.length;
+        index++
+    ) {
 
-        for (
-            let index = 0;
-            index < SECTION_FILES.length;
-            index++
+        const file =
+            SECTION_FILES[index];
+
+
+        const response =
+            await fetch(
+                `${file}?v=${Date.now()}`
+            );
+
+
+        if (
+            !response.ok
         ) {
 
-            const file =
-                SECTION_FILES[index];
-
-            const response =
-                await fetch(
-                    `${file}?v=${Date.now()}`
-                );
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `CSVを読み込めませんでした: ${file} ` +
-                    `(${response.status})`
-                );
-            }
-
-            const text =
-                await response.text();
-
-            const questions =
-                parseCSV(text);
-
-            if (
-                !Array.isArray(questions) ||
-                questions.length === 0
-            ) {
-
-                throw new Error(
-                    `CSVに問題がありません: ${file}`
-                );
-            }
-
-            loadedSections.push(
-                questions
+            throw new Error(
+                `CSV読み込み失敗: ${file} (${response.status})`
             );
+
         }
 
 
-        state.sectionsData =
-            loadedSections;
+        const text =
+            await response.text();
 
 
-        /*
-         * 最初のセクションを準備
-         */
-        prepareSection(0);
+        const questions =
+            parseCSV(text);
 
 
-    } catch (error) {
+        if (
+            questions.length === 0
+        ) {
 
-        console.error(error);
+            throw new Error(
+                `問題が0件です: ${file}`
+            );
 
-        showError(
-            error.message ||
-            "CSVの読み込みに失敗しました。"
+        }
+
+
+        loadedSections.push(
+            questions
         );
+
     }
+
+
+    state.sectionsData =
+        loadedSections;
+
+
+    state.dataReady =
+        true;
+
+
+    DOM.titleMessage.textContent =
+        "PRESS ENTER";
+
+
+    prepareSection(0);
+
 }
+
 
 
 /* =========================================================
@@ -838,21 +1132,11 @@ async function loadAllSections() {
 
 function parseCSV(text) {
 
-    /*
-     * BOM除去
-     */
-    text =
-        String(text || "")
-            .replace(/^\uFEFF/, "")
-            .replace(/\r\n/g, "\n")
-            .replace(/\r/g, "\n");
-
-
     const rows = [];
 
     let row = [];
 
-    let field = "";
+    let cell = "";
 
     let insideQuotes = false;
 
@@ -863,107 +1147,132 @@ function parseCSV(text) {
         i++
     ) {
 
-        const char = text[i];
+        const char =
+            text[i];
 
-        const next = text[i + 1];
 
-
-        /* -------------------------
-           Quote
-        ------------------------- */
-
-        if (char === '"') {
+        if (
+            char === '"'
+        ) {
 
             if (
                 insideQuotes &&
-                next === '"'
+                text[i + 1] === '"'
             ) {
 
-                field += '"';
+                cell += '"';
 
                 i++;
 
-            } else {
+            }
+
+            else {
 
                 insideQuotes =
                     !insideQuotes;
+
             }
 
-            continue;
         }
 
-
-        /* -------------------------
-           Comma
-        ------------------------- */
-
-        if (
+        else if (
             char === "," &&
             !insideQuotes
         ) {
 
-            row.push(field);
+            row.push(cell);
 
-            field = "";
+            cell = "";
 
-            continue;
         }
 
-
-        /* -------------------------
-           New Line
-        ------------------------- */
-
-        if (
-            char === "\n" &&
+        else if (
+            (
+                char === "\n" ||
+                char === "\r"
+            ) &&
             !insideQuotes
         ) {
 
-            row.push(field);
+            if (
+                char === "\r" &&
+                text[i + 1] === "\n"
+            ) {
 
-            rows.push(row);
+                i++;
+
+            }
+
+
+            row.push(cell);
+
+            cell = "";
+
+
+            if (
+                row.some(
+                    value =>
+                        value.trim() !== ""
+                )
+            ) {
+
+                rows.push(row);
+
+            }
+
 
             row = [];
 
-            field = "";
-
-            continue;
         }
 
+        else {
 
-        field += char;
+            cell += char;
+
+        }
+
     }
 
 
-    /*
-     * 最後の行
-     */
     if (
-        field !== "" ||
+        cell !== "" ||
         row.length > 0
     ) {
 
-        row.push(field);
+        row.push(cell);
 
-        rows.push(row);
     }
 
 
-    if (rows.length < 2) {
+    if (
+        row.some(
+            value =>
+                value.trim() !== ""
+        )
+    ) {
+
+        rows.push(row);
+
+    }
+
+
+    if (
+        rows.length < 2
+    ) {
+
         return [];
+
     }
 
 
     const headers =
         rows[0].map(
-            header =>
-                String(header)
-                    .trim()
-                    .toLowerCase()
+            value =>
+                value.trim()
         );
 
 
-    const result = [];
+    const questions = [];
 
 
     for (
@@ -972,55 +1281,43 @@ function parseCSV(text) {
         i++
     ) {
 
-        const values = rows[i];
-
-
-        /*
-         * 空行は無視
-         */
-        if (
-            values.every(
-                value =>
-                    String(value).trim() === ""
-            )
-        ) {
-            continue;
-        }
+        const source =
+            rows[i];
 
 
         const item = {};
 
 
         headers.forEach(
-            (header, index) => {
+            (
+                header,
+                index
+            ) => {
 
                 item[header] =
-                    values[index] !== undefined
-                        ? values[index].trim()
-                        : "";
+                    (
+                        source[index] ||
+                        ""
+                    ).trim();
+
             }
         );
 
 
         /*
-         * answer必須
+         * 空行はスキップ。
+         * CSV全体を止めない。
          */
+
         if (
             !item.answer
         ) {
 
-            console.warn(
-                "answerが空の問題をスキップ:",
-                item
-            );
+            continue;
 
-            return;
         }
 
 
-        /*
-         * displayが空の場合はtitleを使用
-         */
         if (
             !item.display
         ) {
@@ -1028,147 +1325,268 @@ function parseCSV(text) {
             item.display =
                 item.title ||
                 "";
+
         }
 
 
-        result.push(item);
+        item.answer =
+            normalizeCSVAnswer(
+                item.answer
+            );
+
+
+        if (
+            !item.answer
+        ) {
+
+            continue;
+
+        }
+
+
+        questions.push(item);
+
     }
 
 
-    return result;
+    return questions;
+
 }
 
 
+
 /* =========================================================
-   SECTION PREPARE
+   CSV SPECIAL TEXT
+========================================================= */
+
+function normalizeCSVAnswer(value) {
+
+    return value
+
+        .replace(
+            /\[半角スペース\]/g,
+            " "
+        )
+
+        .replace(
+            /\[全角スペース\]/g,
+            "　"
+        )
+
+        .replace(
+            /\[改行\]/g,
+            "\n"
+        )
+
+        .replace(
+            /\[タブ\]/g,
+            "\t"
+        )
+
+        .toLowerCase()
+
+        .trim();
+
+}
+
+
+
+/* =========================================================
+   PREPARE SECTION
 ========================================================= */
 
 function prepareSection(sectionIndex) {
 
-    if (
-        sectionIndex < 0 ||
-        sectionIndex >= state.sectionsData.length
-    ) {
-
-        showError(
-            "存在しないセクションです。"
-        );
-
-        return;
-    }
-
-
     stopTimer();
+
+    clearPressedKeys();
 
 
     state.currentSection =
         sectionIndex;
 
+
     state.sectionQuestions =
         state.sectionsData[
             sectionIndex
-        ];
+        ] || [];
 
 
-    state.currentQuestionIndex = 0;
+    state.currentQuestionIndex =
+        0;
 
 
-    state.score = 0;
+    state.currentAnswer =
+        "";
 
-    state.miss = 0;
+    state.currentPosition =
+        0;
 
-    state.combo = 0;
+
+    state.score =
+        0;
+
+    state.miss =
+        0;
+
+    state.combo =
+        0;
 
 
-    state.sectionCharsTyped = 0;
+    state.sectionCharsTyped =
+        0;
 
 
     state.sectionTotalChars =
         state.sectionQuestions.reduce(
-            (total, question) => {
+            (
+                total,
+                question
+            ) => {
 
                 return (
                     total +
-                    String(
-                        question.answer || ""
-                    ).length
+                    question.answer.length
                 );
+
             },
             0
         );
 
 
-    state.currentAnswer = "";
+    state.sectionStartTime =
+        0;
 
-    state.currentPosition = 0;
-
-
-    state.gameStarted = false;
-
-    state.sectionFinished = false;
-
-    state.processingAnswer = false;
-
-    state.countdownRunning = false;
+    state.sectionElapsed =
+        0;
 
 
-    DOM.sectionNumber.textContent =
-        String(sectionIndex + 1);
+    state.gameStarted =
+        false;
+
+    state.sectionActive =
+        false;
+
+    state.sectionFinished =
+        false;
+
+    state.countdownRunning =
+        false;
+
+    state.handoffRunning =
+        false;
+
+    state.processingAnswer =
+        false;
 
 
-    DOM.questionNumber.textContent =
-        `1 / ${state.sectionQuestions.length}`;
-
-
-    DOM.progressTotal.textContent =
-        String(state.sectionTotalChars);
-
-
-    DOM.questionText.textContent =
-        "";
-
-
-    DOM.romajiProgress.textContent =
-        "";
-
-
-    DOM.timer.textContent =
-        "00:00.000";
-
-
-    resetRunner();
+    updateSectionHeader();
 
     updateHUD();
 
-    updateProgress();
+    resetRunner();
 
-    hideAllOverlays();
-
-    document.body.classList.add("ready");
-
-
-    /*
-     * 問題を表示
-     */
     showQuestion();
 
+    updateSectionStartScreen();
 
-    /*
-     * 入力欄をクリア
-     */
-    if (DOM.typingInput) {
-        DOM.typingInput.value = "";
+}
+
+
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+function updateSectionHeader() {
+
+    const section =
+        state.currentSection + 1;
+
+
+    DOM.sectionNumber.textContent =
+        section;
+
+
+    DOM.teamName.textContent =
+        `TEAM ${state.team}`;
+
+}
+
+
+
+/* =========================================================
+   SECTION START SCREEN
+========================================================= */
+
+function updateSectionStartScreen() {
+
+    const section =
+        state.currentSection + 1;
+
+
+    DOM.sectionStartNumber.textContent =
+        section;
+
+
+    DOM.sectionStartJapanese.textContent =
+        `第 ${section} 区`;
+
+
+    DOM.sectionStartTeam.textContent =
+        `TEAM ${state.team}`;
+
+
+    DOM.sectionStartPlayer.textContent =
+        `PLAYER ${section}`;
+
+
+    DOM.sectionStartPress.textContent =
+        "PRESS ENTER";
+
+}
+
+
+
+/* =========================================================
+   SHOW SECTION START
+========================================================= */
+
+function showSectionStartScreen() {
+
+    if (
+        state.sectionFinished ||
+        state.sectionActive
+    ) {
+
+        return;
+
     }
 
 
-    /*
-     * 少し待ってからフォーカス
-     */
-    setTimeout(
-        focusTypingInput,
-        50
+    updateSectionStartScreen();
+
+
+    DOM.sectionStartOverlay.classList.remove(
+        "hidden"
     );
+
 }
+
+
+
+/* =========================================================
+   HIDE SECTION START
+========================================================= */
+
+function hideSectionStartScreen() {
+
+    DOM.sectionStartOverlay.classList.add(
+        "hidden"
+    );
+
+}
+
 
 
 /* =========================================================
@@ -1188,45 +1606,40 @@ function showQuestion() {
         finishSection();
 
         return;
+
     }
 
 
     /*
-     * ======================================================
-     * 重要
+     * ここは「新しい問題」を
+     * 開始するときだけ呼ぶ。
      *
-     * display
-     * → 画面に表示
-     *
-     * answer
-     * → 実際の入力判定
-     * ======================================================
+     * 区間途中の選手交代はないため、
+     * 交代処理からは呼ばない。
      */
 
-    DOM.questionText.textContent =
-        question.display || "";
-
-
     state.currentAnswer =
-        String(
-            question.answer || ""
-        ).toLowerCase();
+        question.answer;
 
 
-    state.currentPosition = 0;
+    state.currentPosition =
+        0;
 
 
     DOM.questionNumber.textContent =
-        `${state.currentQuestionIndex + 1} / ` +
-        `${state.sectionQuestions.length}`;
+        `${state.currentQuestionIndex + 1} / ${state.sectionQuestions.length}`;
+
+
+    DOM.questionText.textContent =
+        question.display;
 
 
     updateRomajiProgress();
 
     updateRequiredKey();
 
-    focusTypingInput();
 }
+
 
 
 /* =========================================================
@@ -1238,155 +1651,95 @@ function updateRomajiProgress() {
     const answer =
         state.currentAnswer;
 
+
     const position =
         state.currentPosition;
 
 
-    /*
-     * -----------------------------------------------
-     * answerが空の場合
-     * -----------------------------------------------
-     */
+    DOM.romajiProgress.innerHTML =
+        "";
 
-    if (!answer) {
 
-        DOM.romajiProgress.textContent = "";
+    if (
+        !answer
+    ) {
 
         return;
+
     }
 
 
-    /*
-     * -----------------------------------------------
-     * 入力済み
-     * -----------------------------------------------
-     */
-
-    const typed =
-        answer.slice(
-            0,
-            position
-        );
+    const fragment =
+        document.createDocumentFragment();
 
 
-    /*
-     * -----------------------------------------------
-     * 現在入力する1文字
-     * -----------------------------------------------
-     */
+    for (
+        let i = 0;
+        i < answer.length;
+        i++
+    ) {
 
-    const current =
-        answer.charAt(position);
-
-
-    /*
-     * -----------------------------------------------
-     * これから入力する文字
-     * -----------------------------------------------
-     */
-
-    const remaining =
-        answer.slice(
-            position + 1
-        );
+        const span =
+            document.createElement(
+                "span"
+            );
 
 
-    /*
-     * -----------------------------------------------
-     * HTMLとして組み立てる
-     *
-     * textContentを使わず、
-     * 各部分をspanで分離する。
-     * -----------------------------------------------
-     */
-
-    DOM.romajiProgress.innerHTML = "";
+        span.textContent =
+            answer[i];
 
 
-    /*
-     * 入力済み
-     */
+        if (
+            i < position
+        ) {
 
-    if (typed) {
+            span.className =
+                "typed";
 
-        const typedSpan =
-            document.createElement("span");
+        }
 
-        typedSpan.className =
-            "typed";
+        else if (
+            i === position
+        ) {
 
-        typedSpan.textContent =
-            typed;
+            span.className =
+                "current";
 
-        DOM.romajiProgress.appendChild(
-            typedSpan
-        );
+        }
+
+        else {
+
+            span.className =
+                "remaining";
+
+        }
+
+
+        fragment.appendChild(span);
+
     }
 
 
-    /*
-     * 現在入力する文字
-     */
+    DOM.romajiProgress.appendChild(
+        fragment
+    );
 
-    if (current) {
-
-        const currentSpan =
-            document.createElement("span");
-
-        currentSpan.className =
-            "current";
-
-        currentSpan.textContent =
-            current;
-
-        DOM.romajiProgress.appendChild(
-            currentSpan
-        );
-    }
-
-
-    /*
-     * 未入力
-     */
-
-    if (remaining) {
-
-        const remainingSpan =
-            document.createElement("span");
-
-        remainingSpan.className =
-            "remaining";
-
-        remainingSpan.textContent =
-            remaining;
-
-        DOM.romajiProgress.appendChild(
-            remainingSpan
-        );
-    }
 }
+
+
 
 /* =========================================================
    CHARACTER CHECK
 ========================================================= */
 
-function checkCharacter(char) {
+function checkCharacter(character) {
 
     if (
-        !state.gameStarted ||
-        state.sectionFinished ||
-        state.processingAnswer
+        !state.currentAnswer
     ) {
+
         return;
-    }
 
-
-    const input =
-        normalizeInputCharacter(char);
-
-
-    if (!input) {
-        return;
     }
 
 
@@ -1396,13 +1749,9 @@ function checkCharacter(char) {
         ];
 
 
-    /*
-     * ======================================================
-     * 正解
-     * ======================================================
-     */
-
-    if (input === expected) {
+    if (
+        character === expected
+    ) {
 
         state.currentPosition++;
 
@@ -1410,40 +1759,18 @@ function checkCharacter(char) {
 
         state.combo++;
 
-
-        /*
-         * 1文字 = 1点
-         */
         state.score++;
 
 
         showGoodEffect();
 
-
-        /*
-         * コンボが一定数に到達したらBOOST
-         */
-        if (
-            state.combo > 0 &&
-            state.combo % 10 === 0
-        ) {
-
-            showBoostEffect();
-        }
-
-
         updateHUD();
-
-        updateProgress();
 
         updateRomajiProgress();
 
         updateRequiredKey();
 
 
-        /*
-         * 問題クリア
-         */
         if (
             state.currentPosition >=
             state.currentAnswer.length
@@ -1453,28 +1780,27 @@ function checkCharacter(char) {
 
         }
 
-        return;
     }
 
+    else {
 
-    /*
-     * ======================================================
-     * ミス
-     * ======================================================
-     */
+        state.miss++;
 
-    state.miss++;
+        state.combo = 0;
 
-    state.combo = 0;
 
-    showMissEffect();
+        showMissEffect();
 
-    updateHUD();
+        updateHUD();
+
+    }
+
 }
 
 
+
 /* =========================================================
-   QUESTION COMPLETE
+   COMPLETE QUESTION
 ========================================================= */
 
 async function completeQuestion() {
@@ -1482,48 +1808,17 @@ async function completeQuestion() {
     if (
         state.processingAnswer
     ) {
+
         return;
+
     }
 
 
-    state.processingAnswer = true;
+    state.processingAnswer =
+        true;
 
 
-    /*
-     * 最終問題かどうか
-     */
-    const isLastQuestion =
-        state.currentQuestionIndex >=
-        state.sectionQuestions.length - 1;
-
-
-    updateProgress();
-
-
-    /*
-     * ゴール表示
-     */
-    if (isLastQuestion) {
-
-        updateRunner(1);
-
-        if (DOM.finishFlag) {
-            DOM.finishFlag.classList.add("active");
-        }
-
-    } else {
-
-        /*
-         * 問題単位の進行率
-         */
-        const questionProgress =
-            (
-                state.currentQuestionIndex + 1
-            ) /
-            state.sectionQuestions.length;
-
-        updateRunner(questionProgress);
-    }
+    updateRunner();
 
 
     await sleep(
@@ -1531,209 +1826,79 @@ async function completeQuestion() {
     );
 
 
-    /*
-     * 最終問題ならセクション終了
-     */
-    if (isLastQuestion) {
+    state.processingAnswer =
+        false;
 
-        state.processingAnswer = false;
+
+    /*
+     * 最後の問題なら
+     * 次の問題には行かない。
+     *
+     * この瞬間に区間終了。
+     */
+
+    if (
+        state.currentQuestionIndex >=
+        state.sectionQuestions.length - 1
+    ) {
 
         finishSection();
 
         return;
+
     }
 
 
     /*
-     * 次の問題
+     * 同じ選手が
+     * 次の問題を続けてプレイ。
      */
-    state.currentQuestionIndex++;
 
-    state.processingAnswer = false;
+    state.currentQuestionIndex++;
 
     showQuestion();
 
-    focusTypingInput();
 }
+
 
 
 /* =========================================================
-   HUD
-========================================================= */
-
-function updateHUD() {
-
-    DOM.score.textContent =
-        String(state.score);
-
-
-    DOM.miss.textContent =
-        String(state.miss);
-
-
-    DOM.combo.textContent =
-        String(state.combo);
-
-
-    if (DOM.comboSideValue) {
-
-        DOM.comboSideValue.textContent =
-            String(state.combo);
-    }
-
-
-    const totalAttempts =
-        state.sectionCharsTyped +
-        state.miss;
-
-
-    let accuracy = 100;
-
-
-    if (totalAttempts > 0) {
-
-        accuracy =
-            (
-                state.sectionCharsTyped /
-                totalAttempts
-            ) * 100;
-    }
-
-
-    DOM.accuracy.textContent =
-        `${accuracy.toFixed(1)}%`;
-}
-
-
-/* =========================================================
-   PROGRESS
-========================================================= */
-
-function updateProgress() {
-
-    const total =
-        state.sectionTotalChars;
-
-
-    const current =
-        state.sectionCharsTyped;
-
-
-    let percent = 0;
-
-
-    if (total > 0) {
-
-        percent =
-            (
-                current /
-                total
-            ) * 100;
-    }
-
-
-    percent =
-        Math.min(
-            Math.max(percent, 0),
-            100
-        );
-
-
-    DOM.progressPercent.textContent =
-        `${percent.toFixed(0)}%`;
-
-
-    DOM.progressCurrent.textContent =
-        String(current);
-
-
-    DOM.progressTotal.textContent =
-        String(total);
-
-
-    if (DOM.progressFill) {
-
-        DOM.progressFill.style.width =
-            `${percent}%`;
-    }
-
-
-    updateRunner(
-        percent / 100
-    );
-}
-
-
-/* =========================================================
-   RUNNER
-========================================================= */
-
-function resetRunner() {
-
-    DOM.runner.style.left =
-        "0%";
-
-    DOM.runner.style.transform =
-        "translateX(0)";
-
-    if (DOM.finishFlag) {
-
-        DOM.finishFlag.classList.remove(
-            "active"
-        );
-    }
-}
-
-
-function updateRunner(percent) {
-
-    const runnerPercent =
-        Math.min(
-            Math.max(
-                percent * 92,
-                0
-            ),
-            92
-        );
-
-
-    DOM.runner.style.left =
-        `${runnerPercent}%`;
-}
-
-
-/* =========================================================
-   COUNTDOWN
+   START COUNTDOWN
 ========================================================= */
 
 async function startCountdown() {
 
     if (
         state.countdownRunning ||
-        state.gameStarted ||
+        state.sectionActive ||
         state.sectionFinished
     ) {
+
         return;
+
     }
 
 
-    /*
-     * CSV読み込み前なら開始しない
-     */
     if (
-        !state.sectionQuestions ||
-        state.sectionQuestions.length === 0
+        !state.sectionQuestions.length
     ) {
 
         showError(
-            "問題データが読み込まれていません。"
+            "この区間の問題が読み込まれていません。"
         );
 
         return;
+
     }
 
 
-    state.countdownRunning = true;
+    state.countdownRunning =
+        true;
+
+
+    hideSectionStartScreen();
+
+    hideTitleScreen();
 
 
     DOM.countdownOverlay.classList.remove(
@@ -1745,34 +1910,35 @@ async function startCountdown() {
         "3",
         "2",
         "1",
-        "GO!"
+        "GO!!"
     ];
 
 
     for (
-        let i = 0;
-        i < sequence.length;
-        i++
+        const value of sequence
     ) {
 
         DOM.countdown.textContent =
-            sequence[i];
+            value;
 
 
-        DOM.countdown.style.animation =
-            "none";
+        DOM.countdown.classList.remove(
+            "countdown-pop"
+        );
 
 
         void DOM.countdown.offsetWidth;
 
 
-        DOM.countdown.style.animation =
-            "countdown-pop 0.9s ease-out";
+        DOM.countdown.classList.add(
+            "countdown-pop"
+        );
 
 
         await sleep(
             COUNTDOWN_STEP
         );
+
     }
 
 
@@ -1781,32 +1947,67 @@ async function startCountdown() {
     );
 
 
-    state.countdownRunning = false;
-
-    state.gameStarted = true;
-
-    state.sectionFinished = false;
-
-
-    document.body.classList.remove(
-        "ready"
-    );
+    state.countdownRunning =
+        false;
 
 
     /*
-     * タイマー開始
-     *
-     * sectionStartTime は
-     * startTimer() の中だけで設定する。
+     * GO!!の瞬間から
+     * 区間タイマー開始。
      */
-    startTimer();
 
-    focusTypingInput();
+    startSection();
+
 }
 
 
+
 /* =========================================================
-   TIMER
+   START SECTION
+========================================================= */
+
+function startSection() {
+
+    if (
+        state.sectionActive
+    ) {
+
+        return;
+
+    }
+
+
+    state.sectionActive =
+        true;
+
+
+    state.gameStarted =
+        true;
+
+
+    state.sectionFinished =
+        false;
+
+
+    state.sectionStartTime =
+        performance.now();
+
+
+    state.sectionElapsed =
+        0;
+
+
+    startTimer();
+
+
+    focusTypingInput();
+
+}
+
+
+
+/* =========================================================
+   SECTION TIMER
 ========================================================= */
 
 function startTimer() {
@@ -1814,37 +2015,73 @@ function startTimer() {
     stopTimer();
 
 
-    state.sectionStartTime =
-        performance.now();
-
-
     updateTimer();
 
 
     state.timerInterval =
-        window.setInterval(
+        setInterval(
             updateTimer,
             10
         );
+
 }
 
 
+
+/* =========================================================
+   UPDATE TIMER
+========================================================= */
+
 function updateTimer() {
 
-    if (!state.gameStarted) {
+    if (
+        !state.sectionActive
+    ) {
+
         return;
+
     }
 
 
-    const elapsed =
+    state.sectionElapsed =
         performance.now() -
         state.sectionStartTime;
 
 
+    if (
+        state.sectionElapsed >=
+        MAX_SECTION_TIME
+    ) {
+
+        state.sectionElapsed =
+            MAX_SECTION_TIME;
+
+
+        DOM.timer.textContent =
+            formatTime(
+                MAX_SECTION_TIME
+            );
+
+
+        finishSection();
+
+        return;
+
+    }
+
+
     DOM.timer.textContent =
-        formatTime(elapsed);
+        formatTime(
+            state.sectionElapsed
+        );
+
 }
 
+
+
+/* =========================================================
+   STOP TIMER
+========================================================= */
 
 function stopTimer() {
 
@@ -1852,14 +2089,866 @@ function stopTimer() {
         state.timerInterval !== null
     ) {
 
-        window.clearInterval(
+        clearInterval(
             state.timerInterval
         );
 
-        state.timerInterval = null;
+        state.timerInterval =
+            null;
+
     }
+
 }
 
+
+
+/* =========================================================
+   FINISH SECTION
+========================================================= */
+
+function finishSection() {
+
+    if (
+        state.sectionFinished
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * 区間終了。
+     *
+     * ここで初めて
+     * プレイヤーが終了する。
+     */
+
+    state.sectionFinished =
+        true;
+
+
+    state.sectionActive =
+        false;
+
+
+    state.gameStarted =
+        false;
+
+
+    state.countdownRunning =
+        false;
+
+
+    state.handoffRunning =
+        false;
+
+
+    stopTimer();
+
+    clearPressedKeys();
+
+
+    const elapsed =
+        Math.min(
+            state.sectionElapsed,
+            MAX_SECTION_TIME
+        );
+
+
+    state.sectionElapsed =
+        elapsed;
+
+
+    state.sectionTimes[
+        state.currentSection
+    ] = elapsed;
+
+
+    DOM.timer.textContent =
+        formatTime(elapsed);
+
+
+    updateRunnerToFinish();
+
+
+    showSectionResult();
+
+
+
+    /*
+     * 第6区なら
+     * 30秒交代なし。
+     *
+     * それ以外は
+     * 結果画面 → 30秒交代。
+     */
+
+}
+
+
+
+/* =========================================================
+   SECTION RESULT
+========================================================= */
+
+function showSectionResult() {
+
+    const section =
+        state.currentSection + 1;
+
+
+    DOM.resultSectionLabel.textContent =
+        `SECTION ${section}`;
+
+
+    DOM.resultTime.textContent =
+        formatTime(
+            state.sectionElapsed
+        );
+
+
+    DOM.resultScore.textContent =
+        state.score;
+
+
+    DOM.resultMiss.textContent =
+        state.miss;
+
+
+    if (
+        state.currentSection <
+        SECTION_FILES.length - 1
+    ) {
+
+        DOM.resultNextMessage.textContent =
+            "NEXT SECTION IN 30 SECONDS";
+
+    }
+
+    else {
+
+        DOM.resultNextMessage.textContent =
+            "RACE COMPLETE";
+
+    }
+
+
+    DOM.resultOverlay.classList.remove(
+        "hidden"
+    );
+
+
+    if (
+        state.currentSection <
+        SECTION_FILES.length - 1
+    ) {
+
+        setTimeout(
+            () => {
+
+                if (
+                    state.sectionFinished
+                ) {
+
+                    startHandoff();
+
+                }
+
+            },
+            NEXT_SECTION_DELAY
+        );
+
+    }
+
+    else {
+
+        setTimeout(
+            finishRace,
+            NEXT_SECTION_DELAY
+        );
+
+    }
+
+}
+
+
+
+/* =========================================================
+   HANDOFF
+========================================================= */
+
+async function startHandoff() {
+
+    if (
+        state.handoffRunning
+    ) {
+
+        return;
+
+    }
+
+
+    state.handoffRunning =
+        true;
+
+
+    DOM.resultOverlay.classList.add(
+        "hidden"
+    );
+
+
+    DOM.countdownOverlay.classList.remove(
+        "hidden"
+    );
+
+
+    /*
+     * 30秒の交代時間。
+     *
+     * この30秒は
+     * 次区間のPRESS ENTER開始時間
+     * ではなく、
+     * 純粋な選手交代時間。
+     */
+
+    for (
+        let remaining = 30;
+        remaining >= 1;
+        remaining--
+    ) {
+
+        DOM.countdown.textContent =
+            remaining;
+
+
+        DOM.countdown.classList.remove(
+            "countdown-pop"
+        );
+
+
+        void DOM.countdown.offsetWidth;
+
+
+        DOM.countdown.classList.add(
+            "countdown-pop"
+        );
+
+
+        await sleep(1000);
+
+    }
+
+
+    DOM.countdownOverlay.classList.add(
+        "hidden"
+    );
+
+
+    state.handoffRunning =
+        false;
+
+
+    /*
+     * 次区間へ。
+     */
+
+    const nextSection =
+        state.currentSection + 1;
+
+
+    prepareSection(
+        nextSection
+    );
+
+
+    showSectionStartScreen();
+
+}
+
+
+
+/* =========================================================
+   NEXT SECTION
+========================================================= */
+
+function handleResultNext() {
+
+    /*
+     * 現在の区間結果を
+     * TOTALへ加算。
+     */
+
+    state.totalScore +=
+        state.score;
+
+
+    state.totalMiss +=
+        state.miss;
+
+
+    if (
+        state.currentSection >=
+        SECTION_FILES.length - 1
+    ) {
+
+        finishRace();
+
+        return;
+
+    }
+
+
+    const nextSection =
+        state.currentSection + 1;
+
+
+    prepareSection(
+        nextSection
+    );
+
+
+    showSectionStartScreen();
+
+}
+
+
+
+/* =========================================================
+   FINISH RACE
+========================================================= */
+
+function finishRace() {
+
+    if (
+        state.finalFinished
+    ) {
+
+        return;
+
+    }
+
+
+    state.finalFinished =
+        true;
+
+
+    state.sectionActive =
+        false;
+
+
+    state.gameStarted =
+        false;
+
+
+    state.sectionFinished =
+        true;
+
+
+    stopTimer();
+
+    clearPressedKeys();
+
+
+    /*
+     * 第6区のスコアを
+     * TOTALへ加算。
+     */
+
+    state.totalScore +=
+        state.score;
+
+
+    state.totalMiss +=
+        state.miss;
+
+
+    /*
+     * 6区間タイムを合計。
+     */
+
+    const sectionTotal =
+        state.sectionTimes.reduce(
+            (
+                total,
+                value
+            ) => {
+
+                return total + value;
+
+            },
+            0
+        );
+
+
+    /*
+     * 30秒交代 × 5回
+     */
+
+    const handoffTotal =
+        HANDOFF_TIME *
+        (
+            SECTION_FILES.length - 1
+        );
+
+
+    const totalTime =
+        sectionTotal +
+        handoffTotal;
+
+
+    DOM.finalTime.textContent =
+        formatTime(totalTime);
+
+
+    DOM.finalScore.textContent =
+        state.totalScore;
+
+
+    DOM.finalMiss.textContent =
+        state.totalMiss;
+
+
+    DOM.countdownOverlay.classList.add(
+        "hidden"
+    );
+
+
+    DOM.sectionStartOverlay.classList.add(
+        "hidden"
+    );
+
+
+    DOM.finalOverlay.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+function updateHUD() {
+
+    DOM.score.textContent =
+        state.score;
+
+
+    DOM.miss.textContent =
+        state.miss;
+
+
+    DOM.combo.textContent =
+        state.combo;
+
+
+    DOM.comboSideValue.textContent =
+        state.combo;
+
+
+    const attempts =
+        state.sectionCharsTyped +
+        state.miss;
+
+
+    const accuracy =
+        attempts > 0
+            ? (
+                state.sectionCharsTyped /
+                attempts
+            ) * 100
+            : 100;
+
+
+    DOM.accuracy.textContent =
+        `${accuracy.toFixed(1)}%`;
+
+
+    const total =
+        state.sectionTotalChars;
+
+
+    const current =
+        state.sectionCharsTyped;
+
+
+    let percent =
+        total > 0
+            ? (
+                current /
+                total
+            ) * 100
+            : 0;
+
+
+    percent =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                percent
+            )
+        );
+
+
+    DOM.progressPercent.textContent =
+        `${Math.floor(percent)}%`;
+
+
+    DOM.progressCurrent.textContent =
+        current;
+
+
+    DOM.progressTotal.textContent =
+        total;
+
+
+    DOM.progressFill.style.width =
+        `${percent}%`;
+
+
+    updateRunner();
+
+}
+
+
+
+/* =========================================================
+   RUNNER
+========================================================= */
+
+function resetRunner() {
+
+    DOM.runner.style.left =
+        "4%";
+
+    DOM.runner.classList.remove(
+        "runner-finish"
+    );
+
+}
+
+
+
+function updateRunner() {
+
+    if (
+        state.sectionTotalChars <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    const progress =
+        state.sectionCharsTyped /
+        state.sectionTotalChars;
+
+
+    const left =
+        4 +
+        (
+            Math.min(
+                1,
+                progress
+            ) * 88
+        );
+
+
+    DOM.runner.style.left =
+        `${left}%`;
+
+}
+
+
+
+function updateRunnerToFinish() {
+
+    DOM.runner.style.left =
+        "92%";
+
+
+    DOM.runner.classList.add(
+        "runner-finish"
+    );
+
+}
+
+
+
+/* =========================================================
+   FINISH FLAG
+========================================================= */
+
+function resetFinishFlag() {
+
+    DOM.finishFlag.classList.remove(
+        "finish-active"
+    );
+
+}
+
+
+
+/* =========================================================
+   REQUIRED KEY
+========================================================= */
+
+function updateRequiredKey() {
+
+    const expected =
+        state.currentAnswer[
+            state.currentPosition
+        ];
+
+
+    DOM.keys.forEach(
+        keyButton => {
+
+            keyButton.classList.remove(
+                "required"
+            );
+
+        }
+    );
+
+
+    if (
+        expected === undefined
+    ) {
+
+        return;
+
+    }
+
+
+    const normalized =
+        normalizeCharacter(
+            expected
+        );
+
+
+    DOM.keys.forEach(
+        keyButton => {
+
+            if (
+                keyButton.dataset.key ===
+                normalized
+            ) {
+
+                keyButton.classList.add(
+                    "required"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+
+/* =========================================================
+   KEYBOARD EFFECT
+========================================================= */
+
+function flashPressedKey(key) {
+
+    const normalized =
+        normalizeCharacter(key);
+
+
+    DOM.keys.forEach(
+        button => {
+
+            if (
+                button.dataset.key ===
+                normalized
+            ) {
+
+                button.classList.add(
+                    "pressed"
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        button.classList.remove(
+                            "pressed"
+                        );
+
+                    },
+                    100
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+
+function clearPressedKeys() {
+
+    DOM.keys.forEach(
+        button => {
+
+            button.classList.remove(
+                "pressed"
+            );
+
+        }
+    );
+
+}
+
+
+
+/* =========================================================
+   EFFECTS
+========================================================= */
+
+function showGoodEffect() {
+
+    DOM.goodEffect.classList.remove(
+        "show"
+    );
+
+
+    void DOM.goodEffect.offsetWidth;
+
+
+    DOM.goodEffect.classList.add(
+        "show"
+    );
+
+}
+
+
+
+function showMissEffect() {
+
+    DOM.missEffect.classList.remove(
+        "show"
+    );
+
+
+    void DOM.missEffect.offsetWidth;
+
+
+    DOM.missEffect.classList.add(
+        "show"
+    );
+
+}
+
+
+
+/* =========================================================
+   FOCUS
+========================================================= */
+
+function focusTypingInput() {
+
+    if (
+        state.gameStarted
+    ) {
+
+        DOM.typingInput.focus();
+
+    }
+
+}
+
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+function showTitleScreen() {
+
+    DOM.titleOverlay.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+
+function hideTitleScreen() {
+
+    DOM.titleOverlay.classList.add(
+        "hidden"
+    );
+
+}
+
+
+
+/* =========================================================
+   OVERLAYS
+========================================================= */
+
+function hideAllOverlays() {
+
+    DOM.titleOverlay.classList.add(
+        "hidden"
+    );
+
+    DOM.sectionStartOverlay.classList.add(
+        "hidden"
+    );
+
+    DOM.countdownOverlay.classList.add(
+        "hidden"
+    );
+
+    DOM.errorOverlay.classList.add(
+        "hidden"
+    );
+
+    DOM.resultOverlay.classList.add(
+        "hidden"
+    );
+
+    DOM.finalOverlay.classList.add(
+        "hidden"
+    );
+
+}
+
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+function showError(message) {
+
+    DOM.errorMessage.textContent =
+        message;
+
+
+    DOM.errorOverlay.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+
+/* =========================================================
+   FORMAT TIME
+========================================================= */
 
 function formatTime(milliseconds) {
 
@@ -1878,7 +2967,9 @@ function formatTime(milliseconds) {
 
     const seconds =
         Math.floor(
-            (ms % 60000) / 1000
+            (
+                ms % 60000
+            ) / 1000
         );
 
 
@@ -1893,528 +2984,45 @@ function formatTime(milliseconds) {
         "." +
         String(millis).padStart(3, "0")
     );
+
 }
+
 
 
 /* =========================================================
-   EFFECTS
+   SLEEP
 ========================================================= */
 
-function showGoodEffect() {
-
-    if (!DOM.goodEffect) {
-        return;
-    }
-
-
-    DOM.goodEffect.classList.remove(
-        "hidden"
-    );
-
-
-    DOM.goodEffect.style.animation =
-        "none";
-
-
-    void DOM.goodEffect.offsetWidth;
-
-
-    DOM.goodEffect.style.animation =
-        "good-pop 0.3s ease-out";
-
-
-    setTimeout(
-        () => {
-            DOM.goodEffect.classList.add(
-                "hidden"
-            );
-        },
-        300
-    );
-}
-
-
-function showMissEffect() {
-
-    if (!DOM.missEffect) {
-        return;
-    }
-
-
-    DOM.missEffect.classList.remove(
-        "hidden"
-    );
-
-
-    DOM.missEffect.style.animation =
-        "none";
-
-
-    void DOM.missEffect.offsetWidth;
-
-
-    DOM.missEffect.style.animation =
-        "miss-pop 0.3s ease-out";
-
-
-    setTimeout(
-        () => {
-            DOM.missEffect.classList.add(
-                "hidden"
-            );
-        },
-        300
-    );
-}
-
-
-function showBoostEffect() {
-
-    if (!DOM.boostEffect) {
-        return;
-    }
-
-
-    DOM.boostEffect.classList.remove(
-        "hidden"
-    );
-
-
-    DOM.boostEffect.style.animation =
-        "none";
-
-
-    void DOM.boostEffect.offsetWidth;
-
-
-    DOM.boostEffect.style.animation =
-        "boost-pop 0.5s ease-out";
-
-
-    setTimeout(
-        () => {
-            DOM.boostEffect.classList.add(
-                "hidden"
-            );
-        },
-        500
-    );
-}
-
-
-/* =========================================================
-   KEYBOARD HIGHLIGHT
-========================================================= */
-
-function updateRequiredKey() {
-
-    const nextChar =
-        state.currentAnswer[
-            state.currentPosition
-        ] || "";
-
-
-    DOM.keys.forEach(key => {
-
-        key.classList.remove(
-            "active"
-        );
-
-
-        if (
-            key.dataset.key ===
-            nextChar
-        ) {
-
-            key.classList.add(
-                "active"
-            );
-        }
-    });
-}
-
-
-/*
- * 互換用
- */
-function updateKeyboardHighlight() {
-
-    updateRequiredKey();
-}
-
-
-function flashPressedKey(char) {
-
-    if (!char) {
-        return;
-    }
-
-
-    DOM.keys.forEach(key => {
-
-        if (
-            key.dataset.key === char
-        ) {
-
-            key.classList.add(
-                "pressed"
-            );
-
-
-            setTimeout(
-                () => {
-                    key.classList.remove(
-                        "pressed"
-                    );
-                },
-                150
-            );
-        }
-    });
-}
-
-
-function clearPressedKeys() {
-
-    DOM.keys.forEach(key => {
-
-        key.classList.remove(
-            "pressed"
-        );
-    });
-}
-
-
-/* =========================================================
-   FOCUS
-========================================================= */
-
-function focusTypingInput() {
-
-    if (!DOM.typingInput) {
-        return;
-    }
-
-
-    /*
-     * typing-input が表示されている場合でも
-     * ゲーム画面の邪魔をしないようにする。
-     *
-     * CSS側でopacity:0等にしている前提。
-     */
-    try {
-
-        DOM.typingInput.focus({
-            preventScroll: true
-        });
-
-    } catch {
-
-        DOM.typingInput.focus();
-    }
-}
-
-
-/* =========================================================
-   SECTION FINISH
-========================================================= */
-
-function finishSection() {
-
-    if (
-        state.sectionFinished
-    ) {
-        return;
-    }
-
-
-    stopTimer();
-
-
-    state.sectionFinished = true;
-
-    state.gameStarted = false;
-
-
-    const elapsed =
-        performance.now() -
-        state.sectionStartTime;
-
-
-    const finalTime =
-        formatTime(elapsed);
-
-
-    state.sectionTimes[
-        state.currentSection
-    ] = elapsed;
-
-
-    DOM.timer.textContent =
-        finalTime;
-
-
-    DOM.resultTime.textContent =
-        finalTime;
-
-
-    DOM.resultScore.textContent =
-        String(state.score);
-
-
-    DOM.resultMiss.textContent =
-        String(state.miss);
-
-
-    DOM.resultOverlay.classList.remove(
-        "hidden"
-    );
-
-
-    document.body.classList.add(
-        "ready"
-    );
-}
-
-
-/* =========================================================
-   RESULT NEXT
-========================================================= */
-
-function handleResultNext() {
-
-    if (
-        !state.sectionFinished
-    ) {
-        return;
-    }
-
-
-    DOM.resultOverlay.classList.add(
-        "hidden"
-    );
-
-
-    /*
-     * 現在セクションの結果を
-     * 総合結果へ加算
-     */
-    state.totalScore +=
-        state.score;
-
-
-    state.totalMiss +=
-        state.miss;
-
-
-    const nextSection =
-        state.currentSection + 1;
-
-
-    /*
-     * 全セクション終了
-     */
-    if (
-        nextSection >=
-        state.sectionsData.length
-    ) {
-
-        finishRace();
-
-        return;
-    }
-
-
-    /*
-     * 次セクション
-     */
-    setTimeout(
-        () => {
-            prepareSection(
-                nextSection
-            );
-        },
-        NEXT_SECTION_DELAY
-    );
-}
-
-
-/* =========================================================
-   FINAL RESULT
-========================================================= */
-
-function finishRace() {
-
-    stopTimer();
-
-
-    state.gameStarted = false;
-
-    state.sectionFinished = true;
-
-    state.finalFinished = true;
-
-
-    /*
-     * 最後のセクションのタイム
-     */
-    const finalSectionTime =
-        state.sectionTimes[
-            state.sectionTimes.length - 1
-        ] || 0;
-
-
-    /*
-     * 総合タイム
-     *
-     * 各区間タイムの合計
-     */
-    const totalTime =
-        state.sectionTimes.reduce(
-            (total, time) => {
-                return total + time;
-            },
-            0
-        );
-
-
-    DOM.finalTime.textContent =
-        formatTime(totalTime);
-
-
-    DOM.finalScore.textContent =
-        String(state.totalScore);
-
-
-    DOM.finalMiss.textContent =
-        String(state.totalMiss);
-
-
-    DOM.timer.textContent =
-        formatTime(totalTime);
-
-
-    if (DOM.finishFlag) {
-
-        DOM.finishFlag.classList.add(
-            "active"
-        );
-    }
-
-
-    DOM.finalOverlay.classList.remove(
-        "hidden"
-    );
-}
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-function showError(message) {
-
-    console.error(
-        "[KIR ERROR]",
-        message
-    );
-
-
-    if (DOM.errorMessage) {
-
-        DOM.errorMessage.textContent =
-            message;
-    }
-
-
-    if (DOM.errorOverlay) {
-
-        DOM.errorOverlay.classList.remove(
-            "hidden"
-        );
-    }
-}
-
-
-/* =========================================================
-   OVERLAY CONTROL
-========================================================= */
-
-function hideAllOverlays() {
-
-    if (DOM.countdownOverlay) {
-
-        DOM.countdownOverlay.classList.add(
-            "hidden"
-        );
-    }
-
-
-    if (DOM.errorOverlay) {
-
-        DOM.errorOverlay.classList.add(
-            "hidden"
-        );
-    }
-
-
-    if (DOM.resultOverlay) {
-
-        DOM.resultOverlay.classList.add(
-            "hidden"
-        );
-    }
-
-
-    if (DOM.finalOverlay) {
-
-        DOM.finalOverlay.classList.add(
-            "hidden"
-        );
-    }
-}
-
-
-/* =========================================================
-   UTIL
-========================================================= */
-
-function sleep(ms) {
+function sleep(milliseconds) {
 
     return new Promise(
-        resolve => {
+        resolve =>
             setTimeout(
                 resolve,
-                ms
-            );
-        }
+                milliseconds
+            )
     );
+
 }
+
 
 
 /* =========================================================
    DEBUG
-   ブラウザのConsoleから確認できる。
 ========================================================= */
 
 window.KIR_GAME = {
 
-    getState() {
-        return {
-            ...state
-        };
-    },
+    GAME_ID,
 
-    getSections() {
-        return state.sectionsData;
-    },
+    state,
 
-    reload() {
-        location.reload();
-    }
+    startCountdown,
+
+    finishSection,
+
+    prepareSection,
+
+    showSectionStartScreen
+
 };
-
-
-/* =========================================================
-   END
-========================================================= */
