@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>KIR RECREATION TOURNAMENT 2026</title>
 
@@ -17,184 +11,137 @@
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23050a12'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='900' fill='%2300e5ff'%3EK%3C/text%3E%3C/svg%3E"
     >
 
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
+    <link rel="stylesheet" href="css/style.css">
 
+    <style>
+        /* game.js compatibility hooks — intentionally invisible in the new UI */
+        .js-compat-value {
+            position: fixed !important;
+            left: -10000px !important;
+            top: -10000px !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+    </style>
 </head>
-
 
 <body>
 
 <main class="game">
 
-
     <!-- =====================================================
-         HEADER
+         TOP HEADER
     ====================================================== -->
+    <header class="top-header">
 
-    <header class="header">
+        <div class="brand-block">
+            <div class="brand-kir">KIR</div>
 
-        <div class="header-title">
-
-            <div class="event-title">
-                KIR RECREATION TOURNAMENT 2026
+            <div class="brand-copy">
+                <div class="event-title">KIR RECREATION TOURNAMENT <span>2026</span></div>
+                <div class="event-subtitle">チームでつなぐ、最高の時間。</div>
             </div>
-
-            <div class="game-title">
-                めちゃむずキーボード早打ち駅伝
-            </div>
-
         </div>
 
+        <div class="main-title">
+            めちゃむずキーボード早打ち<span>駅伝</span>
+        </div>
 
-        <div class="header-status">
-
-            <div class="status-box">
-
-                <span class="status-label">
-                    SECTION
-                </span>
-
-                <strong id="section-number">
-                    1
-                </strong>
-
-            </div>
-
-
-            <div class="status-box">
-
-                <span class="status-label">
-                    TEAM
-                </span>
-
-                <strong id="team-name">
-                    TEAM A
-                </strong>
-
-            </div>
-
-
-            <div class="status-box timer-box">
-
-                <span class="status-label">
-                    TIME
-                </span>
-
-                <strong id="timer">
-                    00:00.000
-                </strong>
-
-            </div>
-
+        <div class="top-copy">
+            <strong>TYPE FAST</strong>
+            <strong>TEAM STRONG</strong>
+            <strong>KIR TOURNAMENT</strong>
         </div>
 
     </header>
 
 
-
     <!-- =====================================================
-         TEAM SELECTOR
+         RACE STATUS / TEAM
     ====================================================== -->
+    <section class="status-row">
 
-    <section class="team-selector">
+        <div class="section-card">
+            <div class="section-small">SECTION</div>
+            <div class="section-main">
+                <span>第</span>
+                <strong id="section-number">1</strong>
+                <span>区</span>
+            </div>
+        </div>
 
-        <button
-            class="team-select active"
-            data-team="A"
-            type="button"
-        >
-            TEAM A
-        </button>
+        <div class="team-card">
+            <div class="crown">♛</div>
+            <div class="team-label">TEAM</div>
+            <strong id="team-name">TEAM A</strong>
+        </div>
 
-        <button
-            class="team-select"
-            data-team="B"
-            type="button"
-        >
-            TEAM B
-        </button>
+        <div class="timer-card">
+            <div class="timer-icon">◷</div>
+            <div>
+                <div class="timer-label">TIME</div>
+                <strong id="timer">00:00.000</strong>
+            </div>
+        </div>
 
-        <button
-            class="team-select"
-            data-team="C"
-            type="button"
-        >
-            TEAM C
-        </button>
+        <section class="team-selector" aria-label="Team">
 
-        <button
-            class="team-select"
-            data-team="D"
-            type="button"
-        >
-            TEAM D
-        </button>
+            <button class="team-select active" data-team="A" type="button">TEAM A</button>
+            <button class="team-select" data-team="B" type="button">TEAM B</button>
+            <button class="team-select" data-team="C" type="button">TEAM C</button>
+            <button class="team-select" data-team="D" type="button">TEAM D</button>
+            <button class="team-select" data-team="E" type="button">TEAM E</button>
+            <button class="team-select" data-team="F" type="button">TEAM F</button>
 
-        <button
-            class="team-select"
-            data-team="E"
-            type="button"
-        >
-            TEAM E
-        </button>
-
-        <button
-            class="team-select"
-            data-team="F"
-            type="button"
-        >
-            TEAM F
-        </button>
+        </section>
 
     </section>
 
 
-
     <!-- =====================================================
-         RACE PANEL
+         RACE
     ====================================================== -->
-
     <section class="race-panel">
 
         <div class="race-background">
 
+            <div class="city-glow"></div>
             <div class="city-line city-line-1"></div>
             <div class="city-line city-line-2"></div>
-            <div class="city-line city-line-3"></div>
 
-            <div class="road">
-
-                <div class="road-line"></div>
-                <div class="road-line road-line-2"></div>
-
+            <div class="start-mark">
+                <span>START</span>
             </div>
 
+            <div class="road">
+                <div class="road-lane"></div>
+                <div class="road-lane second"></div>
+                <div class="road-dash dash-1"></div>
+                <div class="road-dash dash-2"></div>
+                <div class="road-dash dash-3"></div>
+                <div class="road-dash dash-4"></div>
+                <div class="road-dash dash-5"></div>
+                <div class="road-dash dash-6"></div>
+            </div>
 
-            <div
-                class="runner"
-                id="runner"
-            >
-
+            <div class="runner" id="runner">
                 <img
                     id="runner-image"
                     src="img/character/Ateam.png"
                     alt="TEAM A"
                 >
-
             </div>
 
-
             <div class="finish-line">
-
+                <div class="finish-pole"></div>
                 <img
                     id="finish-flag"
                     src="img/etc/finish_flag.png"
                     alt="FINISH"
                 >
-
             </div>
 
         </div>
@@ -202,226 +149,178 @@
     </section>
 
 
-
     <!-- =====================================================
-         TYPING PANEL
+         TYPING UI
     ====================================================== -->
-
     <section class="typing-panel">
 
+        <!-- effects: IDs preserved for existing JS -->
+        <div id="good-effect" class="good-effect">GOOD!</div>
+        <div id="miss-effect" class="miss-effect">MISS</div>
+        <div id="boost-effect" class="boost-effect">BOOST!</div>
 
-        <!-- GOOD EFFECT -->
+        <!-- Existing game.js compatibility hooks -->
+        <div id="combo" class="js-compat-value" aria-hidden="true">0</div>
+        <div id="combo-side-value" class="js-compat-value" aria-hidden="true">0</div>
 
-        <div
-            id="good-effect"
-            class="good-effect"
-        >
-            GOOD!
+        <div class="typing-main">
+
+            <!-- QUESTION HEADING -->
+            <div class="question-heading">
+
+                <div class="heading-chip genre-chip">
+                    <span class="chip-icon">◉</span>
+                    <span>ジャンル</span>
+                </div>
+
+                <div id="question-genre" class="genre-value">
+                    プログラミングタイピング　SQL　①
+                </div>
+
+                <div class="heading-chip question-chip">
+                    <span class="chip-icon">◉</span>
+                    <span>お題</span>
+                </div>
+
+                <div class="question-no">
+                    <span>QUESTION</span>
+                    <strong id="question-number">1 / 1</strong>
+                </div>
+
+            </div>
+
+
+            <!-- JAPANESE PROMPT -->
+            <div id="question-text" class="question-text">
+                未来をつくるのは　今の自分たちだ
+            </div>
+
+
+            <!-- ROMAJI -->
+            <div class="romaji-box">
+
+                <div class="romaji-track">
+                    <div
+                        id="romaji-progress"
+                        class="romaji-progress"
+                    >
+                        miraiwotsukurunowa　imanojibuntachida
+                    </div>
+                </div>
+
+            </div>
+
         </div>
-
-
-        <!-- MISS EFFECT -->
-
-        <div
-            id="miss-effect"
-            class="miss-effect"
-        >
-            MISS
-        </div>
-
-
-        <!-- BOOST EFFECT -->
-
-        <div
-            id="boost-effect"
-            class="boost-effect"
-        >
-            BOOST!
-        </div>
-
 
 
         <!-- =================================================
-             COMBO SIDE
+             NEXT KEY
         ================================================== -->
+        <aside class="next-key-panel">
 
-        <div class="combo-side">
+            <div class="next-key-title">
+                <span class="next-key-light">◉</span>
+                <span>NEXT KEY</span>
+            </div>
 
-            <div class="combo-side-label">
-                COMBO
+            <div class="next-key-arrow">↓</div>
+
+            <div
+                id="next-key"
+                class="next-key-value"
+            >
+                a
             </div>
 
             <div
-                id="combo-side-value"
-                class="combo-side-value"
+                id="next-key-combo"
+                class="next-key-combo"
             >
-                0
+                a
             </div>
 
+        </aside>
+
+
+        <!-- Existing game.js compatibility hooks (not displayed in the new UI) -->
+        <div class="legacy-hooks" aria-hidden="true">
+            <span id="combo">0</span>
+            <span id="combo-side-value">0</span>
         </div>
 
-
-
         <!-- =================================================
-             QUESTION
+             BOTTOM HUD
         ================================================== -->
+        <div class="bottom-hud">
 
-        <div class="question-panel">
+            <div class="score-card hud-card">
 
-            <div class="question-header">
+                <div class="score-ring">
+                    <span>★</span>
+                </div>
 
-                <span>
-                    QUESTION
-                </span>
-
-                <strong id="question-number">
-                    1 / 1
-                </strong>
-
-            </div>
-
-
-            <div
-                id="question-text"
-                class="question-text"
-            >
-                LOADING...
-            </div>
-
-
-            <div
-                id="romaji-progress"
-                class="romaji-progress"
-            >
-                LOADING...
-            </div>
-
-        </div>
-
-
-
-        <!-- =================================================
-             HUD
-        ================================================== -->
-
-        <div class="hud">
-
-            <div class="hud-box">
-
-                <span class="hud-label">
-                    SCORE
-                </span>
-
-                <strong id="score">
-                    0
-                </strong>
+                <div class="score-copy">
+                    <div class="hud-title">♛ SCORE</div>
+                    <strong id="score">0</strong>
+                    <span class="score-unit">pt</span>
+                </div>
 
             </div>
 
 
-            <div class="hud-box">
-
-                <span class="hud-label">
-                    MISS
-                </span>
-
-                <strong id="miss">
-                    0
-                </strong>
-
+            <div class="metric-card hud-card">
+                <div class="hud-title">✕ MISS</div>
+                <strong id="miss">0</strong>
+                <span class="metric-unit">回</span>
             </div>
 
 
-            <div class="hud-box">
-
-                <span class="hud-label">
-                    COMBO
-                </span>
-
-                <strong id="combo">
-                    0
-                </strong>
-
+            <div class="metric-card hud-card">
+                <div class="hud-title">◎ ACCURACY</div>
+                <strong id="accuracy">100.0%</strong>
             </div>
 
 
-            <div class="hud-box">
+            <div class="progress-card hud-card">
 
-                <span class="hud-label">
-                    ACCURACY
-                </span>
+                <div class="progress-title">
+                    <span>⚑ PROGRESS</span>
+                </div>
 
-                <strong id="accuracy">
-                    100.0%
-                </strong>
+                <div class="progress-track">
+                    <div
+                        id="progress-fill"
+                        class="progress-fill"
+                    ></div>
+
+                    <div class="progress-runner">♟</div>
+                </div>
+
+                <div class="progress-info">
+                    <div>
+                        <strong id="progress-current">0</strong>
+                        <span>/</span>
+                        <strong id="progress-total">0</strong>
+                        <span>文字</span>
+                    </div>
+
+                    <div>
+                        全体の <strong id="progress-percent">0%</strong>
+                    </div>
+                </div>
 
             </div>
 
         </div>
 
 
-
         <!-- =================================================
-             PROGRESS
+             HIDDEN COMPATIBILITY KEYBOARD
+             UIには表示しない。既存JSとの互換用。
         ================================================== -->
-
-        <div class="progress-panel">
-
-            <div class="progress-top">
-
-                <span>
-                    SECTION PROGRESS
-                </span>
-
-                <strong id="progress-percent">
-                    0%
-                </strong>
-
-            </div>
-
-
-            <div class="progress-bar">
-
-                <div
-                    id="progress-fill"
-                    class="progress-fill"
-                ></div>
-
-            </div>
-
-
-            <div class="progress-bottom">
-
-                <span id="progress-current">
-                    0
-                </span>
-
-                <span>
-                    /
-                </span>
-
-                <span id="progress-total">
-                    0
-                </span>
-
-                <span>
-                    CHARACTERS
-                </span>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- =================================================
-             VIRTUAL KEYBOARD
-        ================================================== -->
-
-        <div class="keyboard">
+        <div class="keyboard" aria-hidden="true">
 
             <div class="keyboard-row">
-
                 <button class="key" data-key="1">1</button>
                 <button class="key" data-key="2">2</button>
                 <button class="key" data-key="3">3</button>
@@ -435,12 +334,9 @@
                 <button class="key" data-key="-">-</button>
                 <button class="key" data-key="^">^</button>
                 <button class="key" data-key="\">¥</button>
-
             </div>
 
-
             <div class="keyboard-row">
-
                 <button class="key key-wide" data-key="q">Q</button>
                 <button class="key" data-key="w">W</button>
                 <button class="key" data-key="e">E</button>
@@ -453,12 +349,9 @@
                 <button class="key" data-key="p">P</button>
                 <button class="key" data-key="@">@</button>
                 <button class="key" data-key="[">[</button>
-
             </div>
 
-
             <div class="keyboard-row">
-
                 <button class="key key-offset" data-key="a">A</button>
                 <button class="key" data-key="s">S</button>
                 <button class="key" data-key="d">D</button>
@@ -471,19 +364,10 @@
                 <button class="key" data-key=";">;</button>
                 <button class="key" data-key=":">:</button>
                 <button class="key" data-key="]">]</button>
-
             </div>
 
-
             <div class="keyboard-row">
-
-                <button
-                    class="key key-shift"
-                    data-key="shift"
-                >
-                    SHIFT
-                </button>
-
+                <button class="key key-shift" data-key="shift">SHIFT</button>
                 <button class="key" data-key="z">Z</button>
                 <button class="key" data-key="x">X</button>
                 <button class="key" data-key="c">C</button>
@@ -494,14 +378,7 @@
                 <button class="key" data-key=",">,</button>
                 <button class="key" data-key=".">.</button>
                 <button class="key" data-key="/">/</button>
-
-                <button
-                    class="key key-space"
-                    data-key=" "
-                >
-                    SPACE
-                </button>
-
+                <button class="key key-space" data-key=" ">SPACE</button>
             </div>
 
         </div>
@@ -509,15 +386,10 @@
     </section>
 
 
-
     <!-- =====================================================
-         SECTION START
+         TITLE
     ====================================================== -->
-
-    <div
-        id="title-overlay"
-        class="overlay title-overlay"
-    >
+    <div id="title-overlay" class="overlay title-overlay">
 
         <div class="title-screen">
 
@@ -529,17 +401,11 @@
                 めちゃむずキーボード早打ち駅伝
             </div>
 
-            <div
-                id="title-section"
-                class="title-section"
-            >
+            <div id="title-section" class="title-section">
                 第1区スタート
             </div>
 
-            <div
-                id="title-press-enter"
-                class="title-press-enter"
-            >
+            <div id="title-press-enter" class="title-press-enter">
                 PRESS ENTER
             </div>
 
@@ -548,50 +414,31 @@
     </div>
 
 
-
     <!-- =====================================================
          COUNTDOWN
     ====================================================== -->
-
     <div
         id="countdown-overlay"
         class="overlay countdown-overlay hidden"
     >
-
-        <div
-            id="countdown"
-            class="countdown"
-        >
-            3
-        </div>
-
+        <div id="countdown" class="countdown">3</div>
     </div>
-
 
 
     <!-- =====================================================
          ERROR
     ====================================================== -->
-
-    <div
-        id="error-overlay"
-        class="overlay hidden"
-    >
+    <div id="error-overlay" class="overlay hidden">
 
         <div class="modal error-modal">
 
-            <div class="modal-title">
-                ERROR
-            </div>
+            <div class="modal-title">ERROR</div>
 
             <p id="error-message">
                 エラーが発生しました。
             </p>
 
-            <button
-                id="error-reload-button"
-                type="button"
-            >
+            <button id="error-reload-button" type="button">
                 RELOAD
             </button>
 
@@ -600,74 +447,39 @@
     </div>
 
 
-
     <!-- =====================================================
          SECTION RESULT
     ====================================================== -->
-
-    <div
-        id="result-overlay"
-        class="overlay hidden"
-    >
+    <div id="result-overlay" class="overlay hidden">
 
         <div class="modal result-modal">
 
-            <div class="modal-kicker">
-                SECTION COMPLETE
-            </div>
+            <div class="modal-kicker">SECTION COMPLETE</div>
 
             <div class="modal-title">
                 第<span id="result-section">1</span>区 RESULT
             </div>
 
-
             <div class="result-grid">
 
                 <div class="result-item">
-
-                    <span>
-                        TIME
-                    </span>
-
-                    <strong id="result-time">
-                        00:00.000
-                    </strong>
-
+                    <span>TIME</span>
+                    <strong id="result-time">00:00.000</strong>
                 </div>
 
-
                 <div class="result-item">
-
-                    <span>
-                        SCORE
-                    </span>
-
-                    <strong id="result-score">
-                        0
-                    </strong>
-
+                    <span>SCORE</span>
+                    <strong id="result-score">0</strong>
                 </div>
 
-
                 <div class="result-item">
-
-                    <span>
-                        MISS
-                    </span>
-
-                    <strong id="result-miss">
-                        0
-                    </strong>
-
+                    <span>MISS</span>
+                    <strong id="result-miss">0</strong>
                 </div>
 
             </div>
 
-
-            <button
-                id="result-next-button"
-                type="button"
-            >
+            <button id="result-next-button" type="button">
                 NEXT SECTION
             </button>
 
@@ -676,74 +488,37 @@
     </div>
 
 
-
     <!-- =====================================================
          FINAL RESULT
     ====================================================== -->
-
-    <div
-        id="final-overlay"
-        class="overlay hidden"
-    >
+    <div id="final-overlay" class="overlay hidden">
 
         <div class="modal final-modal">
 
-            <div class="modal-kicker">
-                RACE COMPLETE
-            </div>
+            <div class="modal-kicker">RACE COMPLETE</div>
 
-            <div class="modal-title">
-                FINAL RESULT
-            </div>
-
+            <div class="modal-title">FINAL RESULT</div>
 
             <div class="final-main">
-
-                <span>
-                    TOTAL TIME
-                </span>
-
-                <strong id="final-time">
-                    00:00.000
-                </strong>
-
+                <span>TOTAL TIME</span>
+                <strong id="final-time">00:00.000</strong>
             </div>
-
 
             <div class="result-grid">
 
                 <div class="result-item">
-
-                    <span>
-                        SCORE
-                    </span>
-
-                    <strong id="final-score">
-                        0
-                    </strong>
-
+                    <span>SCORE</span>
+                    <strong id="final-score">0</strong>
                 </div>
 
-
                 <div class="result-item">
-
-                    <span>
-                        MISS
-                    </span>
-
-                    <strong id="final-miss">
-                        0
-                    </strong>
-
+                    <span>MISS</span>
+                    <strong id="final-miss">0</strong>
                 </div>
 
             </div>
 
-
-            <button
-                id="restart-button"
-                type="button"
-            >
+            <button id="restart-button" type="button">
                 PLAY AGAIN
             </button>
 
@@ -752,11 +527,9 @@
     </div>
 
 
-
     <!-- =====================================================
          HIDDEN INPUT
     ====================================================== -->
-
     <input
         id="typing-input"
         type="text"
@@ -768,9 +541,7 @@
 
 </main>
 
-
 <script src="js/game.js"></script>
 
 </body>
-
 </html>

@@ -1,6 +1,17 @@
 /* =========================================================
    KIR RECREATION TOURNAMENT 2026
    めちゃむずキーボード早打ち駅伝
+
+   game.js 完全版
+
+   CSV仕様:
+   question_no,section,genre,display,answer
+
+   display = 画面表示
+   answer  = 実際の入力判定
+
+   1人 = 1区間
+   1区間 = 2分30秒
 ========================================================= */
 
 "use strict";
@@ -12,6 +23,10 @@
 
 const GAME_ID = "KIR-KAI-2026";
 
+
+/*
+ * 使用可能チーム
+ */
 const VALID_TEAMS = [
     "A",
     "B",
@@ -22,46 +37,51 @@ const VALID_TEAMS = [
 ];
 
 
+/*
+ * 区間CSV
+ *
+ * 現在の仕様では5区間。
+ *
+ * もし6区間に戻す場合は
+ * 下に "data/section6.csv" を追加する。
+ */
 const SECTION_FILES = [
-
     "data/section1.csv",
     "data/section2.csv",
     "data/section3.csv",
     "data/section4.csv",
-    "data/section5.csv",
-    "data/section6.csv"
-
+    "data/section5.csv"
 ];
 
 
 /*
- * 1人 = 1区間
+ * 1区間の制限時間
  *
- * 各区間の制限時間
+ * 2分30秒
  */
-const PLAYER_TIME = 150000;
+const SECTION_TIME = 150000;
 
 
 /*
  * カウントダウン
  */
-const COUNTDOWN_STEP = 1000;
+const COUNTDOWN_TIME = 1000;
 
 
 /*
- * 問題切り替え演出
+ * 問題切り替えの待ち時間
  */
-const NEXT_QUESTION_DELAY = 200;
+const NEXT_QUESTION_DELAY = 150;
 
 
 /*
- * 区間結果表示まで
+ * 区間終了後の待ち時間
  */
-const NEXT_SECTION_DELAY = 500;
+const NEXT_SECTION_DELAY = 300;
 
 
 /* =========================================================
-   DOM
+   DOM HELPER
 ========================================================= */
 
 function $(id) {
@@ -71,7 +91,15 @@ function $(id) {
 }
 
 
+/* =========================================================
+   DOM
+========================================================= */
+
 const DOM = {
+
+    /* -----------------------------------------------------
+       HEADER
+    ----------------------------------------------------- */
 
     sectionNumber:
         $("section-number"),
@@ -81,6 +109,11 @@ const DOM = {
 
     timer:
         $("timer"),
+
+
+    /* -----------------------------------------------------
+       RUNNER
+    ----------------------------------------------------- */
 
     runner:
         $("runner"),
@@ -92,8 +125,15 @@ const DOM = {
         $("finish-flag"),
 
 
+    /* -----------------------------------------------------
+       QUESTION
+    ----------------------------------------------------- */
+
     questionNumber:
         $("question-number"),
+
+    questionGenre:
+        $("question-genre"),
 
     questionText:
         $("question-text"),
@@ -101,6 +141,21 @@ const DOM = {
     romajiProgress:
         $("romaji-progress"),
 
+
+    /* -----------------------------------------------------
+       NEXT KEY
+    ----------------------------------------------------- */
+
+    nextKey:
+        $("next-key"),
+
+    nextKeyCombo:
+        $("next-key-combo"),
+
+
+    /* -----------------------------------------------------
+       SCORE
+    ----------------------------------------------------- */
 
     score:
         $("score"),
@@ -118,6 +173,10 @@ const DOM = {
         $("accuracy"),
 
 
+    /* -----------------------------------------------------
+       PROGRESS
+    ----------------------------------------------------- */
+
     progressPercent:
         $("progress-percent"),
 
@@ -131,6 +190,10 @@ const DOM = {
         $("progress-total"),
 
 
+    /* -----------------------------------------------------
+       EFFECT
+    ----------------------------------------------------- */
+
     goodEffect:
         $("good-effect"),
 
@@ -141,12 +204,20 @@ const DOM = {
         $("boost-effect"),
 
 
+    /* -----------------------------------------------------
+       COUNTDOWN
+    ----------------------------------------------------- */
+
     countdownOverlay:
         $("countdown-overlay"),
 
     countdown:
         $("countdown"),
 
+
+    /* -----------------------------------------------------
+       TITLE
+    ----------------------------------------------------- */
 
     titleOverlay:
         $("title-overlay"),
@@ -158,6 +229,10 @@ const DOM = {
         $("title-press-enter"),
 
 
+    /* -----------------------------------------------------
+       ERROR
+    ----------------------------------------------------- */
+
     errorOverlay:
         $("error-overlay"),
 
@@ -167,6 +242,10 @@ const DOM = {
     errorReloadButton:
         $("error-reload-button"),
 
+
+    /* -----------------------------------------------------
+       RESULT
+    ----------------------------------------------------- */
 
     resultOverlay:
         $("result-overlay"),
@@ -187,6 +266,10 @@ const DOM = {
         $("result-next-button"),
 
 
+    /* -----------------------------------------------------
+       FINAL
+    ----------------------------------------------------- */
+
     finalOverlay:
         $("final-overlay"),
 
@@ -203,18 +286,35 @@ const DOM = {
         $("restart-button"),
 
 
+    /* -----------------------------------------------------
+       INPUT
+    ----------------------------------------------------- */
+
     typingInput:
         $("typing-input"),
 
 
+    /* -----------------------------------------------------
+       TEAM BUTTON
+    ----------------------------------------------------- */
+
     teamButtons:
-        document.querySelectorAll(".team-select"),
+        document.querySelectorAll(
+            ".team-select"
+        ),
+
+
+    /* -----------------------------------------------------
+       OLD VIRTUAL KEYBOARD
+       互換用
+    ----------------------------------------------------- */
 
     keys:
-        document.querySelectorAll(".key")
+        document.querySelectorAll(
+            ".key"
+        )
 
 };
-
 
 
 /* =========================================================
@@ -223,87 +323,76 @@ const DOM = {
 
 const state = {
 
+    /* -----------------------------------------------------
+       SYSTEM
+    ----------------------------------------------------- */
+
     initialized:
         false,
 
+    dataReady:
+        false,
 
-    /*
-     * TEAM
-     */
+
+    /* -----------------------------------------------------
+       TEAM
+    ----------------------------------------------------- */
+
     team:
         "A",
 
 
-    /*
-     * CSV
-     */
+    /* -----------------------------------------------------
+       CSV DATA
+    ----------------------------------------------------- */
+
     sectionsData:
         [],
 
 
-    /*
-     * 現在の区間
-     *
-     * 0 = 第1区
-     * 1 = 第2区
-     * ...
-     */
+    /* -----------------------------------------------------
+       CURRENT SECTION
+    ----------------------------------------------------- */
+
     currentSection:
         0,
 
-
-    /*
-     * 現在区間の問題
-     */
     sectionQuestions:
         [],
 
 
-    /*
-     * 現在問題
-     */
+    /* -----------------------------------------------------
+       CURRENT QUESTION
+    ----------------------------------------------------- */
+
     currentQuestionIndex:
         0,
 
-
-    /*
-     * 現在問題の正解
-     */
     currentAnswer:
         "",
 
-
-    /*
-     * 現在の入力位置
-     */
     currentPosition:
         0,
 
 
-    /*
-     * 区間スコア
-     */
+    /* -----------------------------------------------------
+       SECTION SCORE
+    ----------------------------------------------------- */
+
     score:
         0,
 
-
-    /*
-     * 区間MISS
-     */
     miss:
         0,
 
-
-    /*
-     * COMBO
-     */
     combo:
         0,
 
 
-    /*
-     * 全区間合計
-     */
+    /* -----------------------------------------------------
+       TOTAL SCORE
+    ----------------------------------------------------- */
+
     totalScore:
         0,
 
@@ -311,100 +400,64 @@ const state = {
         0,
 
 
-    /*
-     * 現在区間の総文字数
-     */
+    /* -----------------------------------------------------
+       PROGRESS
+    ----------------------------------------------------- */
+
     sectionTotalChars:
         0,
 
-
-    /*
-     * 現在区間で入力済み文字数
-     */
     sectionCharsTyped:
         0,
 
 
-    /*
-     * 区間開始時刻
-     */
+    /* -----------------------------------------------------
+       TIMER
+    ----------------------------------------------------- */
+
     sectionStartTime:
         0,
 
-
-    /*
-     * 区間経過時間
-     */
     sectionElapsed:
         0,
 
-
-    /*
-     * 区間タイマー
-     */
     timerInterval:
         null,
 
 
-    /*
-     * 現在の区間が実際に走っているか
-     */
+    /* -----------------------------------------------------
+       GAME STATUS
+    ----------------------------------------------------- */
+
     sectionActive:
         false,
 
-
-    /*
-     * ゲーム入力可能
-     */
     gameStarted:
         false,
 
-
-    /*
-     * 区間結果表示中
-     */
     sectionFinished:
         false,
 
-
-    /*
-     * 初期 / 区間タイトル画面
-     */
     titleScreen:
         true,
 
-
-    /*
-     * CSVロード済み
-     */
-    dataReady:
-        false,
-
-
-    /*
-     * 3-2-1-GO中
-     */
     countdownRunning:
         false,
 
-
-    /*
-     * 問題処理中
-     */
     processingAnswer:
         false,
 
-
-    /*
-     * 2:30到達
-     */
     timeExpired:
         false,
 
+    finalFinished:
+        false,
 
-    /*
-     * 2:30時点の位置を保存
-     */
+
+    /* -----------------------------------------------------
+       TIME LIMIT POSITION
+    ----------------------------------------------------- */
+
     savedQuestionIndex:
         0,
 
@@ -412,21 +465,107 @@ const state = {
         0,
 
 
-    /*
-     * 各区間タイム
-     */
+    /* -----------------------------------------------------
+       SECTION TIMES
+    ----------------------------------------------------- */
+
     sectionTimes:
-        [],
-
-
-    /*
-     * 最終結果
-     */
-    finalFinished:
-        false
+        []
 
 };
 
+
+/* =========================================================
+   DOM CHECK
+========================================================= */
+
+function checkDOM() {
+
+    const required = [
+
+        "section-number",
+        "team-name",
+        "timer",
+
+        "runner",
+        "runner-image",
+
+        "question-number",
+        "question-genre",
+        "question-text",
+        "romaji-progress",
+
+        "next-key",
+        "next-key-combo",
+
+        "score",
+        "miss",
+        "combo",
+        "combo-side-value",
+        "accuracy",
+
+        "progress-percent",
+        "progress-fill",
+        "progress-current",
+        "progress-total",
+
+        "good-effect",
+        "miss-effect",
+        "boost-effect",
+
+        "countdown-overlay",
+        "countdown",
+
+        "title-overlay",
+        "title-section",
+        "title-press-enter",
+
+        "error-overlay",
+        "error-message",
+        "error-reload-button",
+
+        "result-overlay",
+        "result-section",
+        "result-time",
+        "result-score",
+        "result-miss",
+        "result-next-button",
+
+        "final-overlay",
+        "final-time",
+        "final-score",
+        "final-miss",
+        "restart-button",
+
+        "typing-input"
+
+    ];
+
+
+    const missing = [];
+
+
+    required.forEach(id => {
+
+        if (!$(id)) {
+
+            missing.push(id);
+
+        }
+
+    });
+
+
+    if (missing.length > 0) {
+
+        throw new Error(
+            "HTML要素が見つかりません:\n\n" +
+            missing.join("\n")
+        );
+
+    }
+
+}
 
 
 /* =========================================================
@@ -443,25 +582,36 @@ async function initialize() {
 
     try {
 
+        // DOM要素の存在チェック
         checkDOM();
 
+        // 各種イベントリスナーの登録
         bindEvents();
 
+        // URLパラメータからチーム情報を取得
         readTeamFromURL();
 
+        // 取得したチーム情報を画面に反映
         applyTeam();
 
+        // ゲーム状態の全体リセット
         resetWholeGame();
 
+        // 全区間のCSVデータをロード
         await loadAllSections();
 
         state.initialized = true;
+
+        console.log(
+            `[${GAME_ID}] initialized`
+        );
 
     }
     catch (error) {
 
         console.error(error);
 
+        // エラー発生時にオーバーレイ画面を表示
         showError(
             error instanceof Error
                 ? error.message
@@ -472,95 +622,11 @@ async function initialize() {
 
 }
 
-
-
-/* =========================================================
-   DOM CHECK
-========================================================= */
-
-function checkDOM() {
-
-    const required = [
-
-        ["section-number", DOM.sectionNumber],
-        ["team-name", DOM.teamName],
-        ["timer", DOM.timer],
-
-        ["runner", DOM.runner],
-        ["runner-image", DOM.runnerImage],
-
-        ["question-number", DOM.questionNumber],
-        ["question-text", DOM.questionText],
-        ["romaji-progress", DOM.romajiProgress],
-
-        ["score", DOM.score],
-        ["miss", DOM.miss],
-        ["combo", DOM.combo],
-        ["combo-side-value", DOM.comboSideValue],
-        ["accuracy", DOM.accuracy],
-
-        ["progress-percent", DOM.progressPercent],
-        ["progress-fill", DOM.progressFill],
-        ["progress-current", DOM.progressCurrent],
-        ["progress-total", DOM.progressTotal],
-
-        ["good-effect", DOM.goodEffect],
-        ["miss-effect", DOM.missEffect],
-        ["boost-effect", DOM.boostEffect],
-
-        ["countdown-overlay", DOM.countdownOverlay],
-        ["countdown", DOM.countdown],
-
-        ["title-overlay", DOM.titleOverlay],
-        ["title-section", DOM.titleSection],
-        ["title-press-enter", DOM.titlePressEnter],
-
-        ["error-overlay", DOM.errorOverlay],
-        ["error-message", DOM.errorMessage],
-        ["error-reload-button", DOM.errorReloadButton],
-
-        ["result-overlay", DOM.resultOverlay],
-        ["result-section", DOM.resultSection],
-        ["result-time", DOM.resultTime],
-        ["result-score", DOM.resultScore],
-        ["result-miss", DOM.resultMiss],
-        ["result-next-button", DOM.resultNextButton],
-
-        ["final-overlay", DOM.finalOverlay],
-        ["final-time", DOM.finalTime],
-        ["final-score", DOM.finalScore],
-        ["final-miss", DOM.finalMiss],
-        ["restart-button", DOM.restartButton],
-
-        ["typing-input", DOM.typingInput]
-
-    ];
-
-
-    const missing = required
-        .filter(item => !item[1])
-        .map(item => item[0]);
-
-
-    if (missing.length > 0) {
-
-        throw new Error(
-            "HTML要素が見つかりません:\n" +
-            missing.join(", ")
-        );
-
-    }
-
-}
-
-
-
 /* =========================================================
    EVENTS
 ========================================================= */
 
 function bindEvents() {
-
 
     /*
      * キーボード
@@ -572,46 +638,50 @@ function bindEvents() {
 
 
     /*
-     * TEAM
+     * チーム選択
      */
-    DOM.teamButtons.forEach(button => {
+    DOM.teamButtons.forEach(
+        button => {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                if (
-                    state.sectionActive ||
-                    state.countdownRunning
-                ) {
+                    if (
+                        state.sectionActive ||
+                        state.countdownRunning
+                    ) {
 
-                    return;
+                        return;
+
+                    }
+
+
+                    const team =
+                        String(
+                            button.dataset.team || ""
+                        ).toUpperCase();
+
+
+                    if (
+                        VALID_TEAMS.includes(team)
+                    ) {
+
+                        state.team = team;
+
+                        applyTeam();
+
+                    }
 
                 }
+            );
 
-
-                const team =
-                    button.dataset.team;
-
-
-                if (
-                    VALID_TEAMS.includes(team)
-                ) {
-
-                    state.team = team;
-
-                    applyTeam();
-
-                }
-
-            }
-        );
-
-    });
+        }
+    );
 
 
     /*
-     * SECTION NEXT
+     * 区間結果 → 次へ
      */
     DOM.resultNextButton.addEventListener(
         "click",
@@ -620,7 +690,7 @@ function bindEvents() {
 
 
     /*
-     * RESTART
+     * 最終結果 → リスタート
      */
     DOM.restartButton.addEventListener(
         "click",
@@ -633,7 +703,7 @@ function bindEvents() {
 
 
     /*
-     * ERROR RELOAD
+     * エラー → リロード
      */
     DOM.errorReloadButton.addEventListener(
         "click",
@@ -646,24 +716,29 @@ function bindEvents() {
 
 
     /*
-     * 仮想キーボード
+     * 古い仮想キーボード
+     *
+     * 実際の入力判定には使用しない。
      */
-    DOM.keys.forEach(key => {
+    DOM.keys.forEach(
+        key => {
 
-        key.addEventListener(
-            "mousedown",
-            event => {
+            key.addEventListener(
+                "mousedown",
+                event => {
 
-                event.preventDefault();
+                    event.preventDefault();
 
-            }
-        );
+                }
+            );
 
-    });
+        }
+    );
 
 
     /*
-     * ブラウザのフォーカスが外れた場合
+     * ブラウザからフォーカスが外れたら
+     * キー発光だけ解除
      */
     window.addEventListener(
         "blur",
@@ -673,15 +748,14 @@ function bindEvents() {
 }
 
 
-
 /* =========================================================
-   KEYBOARD INPUT
+   KEYDOWN
 ========================================================= */
 
 function handleKeyDown(event) {
 
     /*
-     * Ctrl / Alt / Meta は無視
+     * Ctrl / Alt / Meta
      */
     if (
         event.ctrlKey ||
@@ -694,13 +768,16 @@ function handleKeyDown(event) {
     }
 
 
-    /*
-     * FINAL
-     */
+    /* -----------------------------------------------------
+       FINAL
+    ----------------------------------------------------- */
+
     if (
         event.key === "Enter" &&
         state.finalFinished
     ) {
+
+        event.preventDefault();
 
         location.reload();
 
@@ -709,15 +786,17 @@ function handleKeyDown(event) {
     }
 
 
-    /*
-     * 区間スタート画面
-     */
+    /* -----------------------------------------------------
+       TITLE
+    ----------------------------------------------------- */
+
     if (
         event.key === "Enter" &&
         state.titleScreen
     ) {
 
         event.preventDefault();
+
 
         if (
             state.dataReady &&
@@ -728,14 +807,16 @@ function handleKeyDown(event) {
 
         }
 
+
         return;
 
     }
 
 
-    /*
-     * 区間結果
-     */
+    /* -----------------------------------------------------
+       RESULT
+    ----------------------------------------------------- */
+
     if (
         event.key === "Enter" &&
         state.sectionFinished
@@ -750,9 +831,10 @@ function handleKeyDown(event) {
     }
 
 
-    /*
-     * ゲーム中でなければ入力不可
-     */
+    /* -----------------------------------------------------
+       GAME ACTIVE CHECK
+    ----------------------------------------------------- */
+
     if (
         !state.gameStarted ||
         !state.sectionActive ||
@@ -766,10 +848,13 @@ function handleKeyDown(event) {
     }
 
 
-    /*
-     * Enter は入力文字ではない
-     */
-    if (event.key === "Enter") {
+    /* -----------------------------------------------------
+       ENTER
+    ----------------------------------------------------- */
+
+    if (
+        event.key === "Enter"
+    ) {
 
         event.preventDefault();
 
@@ -778,21 +863,27 @@ function handleKeyDown(event) {
     }
 
 
-    /*
-     * Shift 単独は無視
-     */
-    if (event.key === "Shift") {
+    /* -----------------------------------------------------
+       SHIFT
+    ----------------------------------------------------- */
+
+    if (
+        event.key === "Shift"
+    ) {
 
         return;
 
     }
 
 
-    /*
-     * 1文字だけ取得
-     */
+    /* -----------------------------------------------------
+       CHARACTER
+    ----------------------------------------------------- */
+
     const key =
-        normalizeKey(event.key);
+        normalizeKey(
+            event.key
+        );
 
 
     if (!key) {
@@ -803,9 +894,11 @@ function handleKeyDown(event) {
 
 
     /*
-     * 通常文字のみ
+     * 1文字だけ
      */
-    if (key.length !== 1) {
+    if (
+        key.length !== 1
+    ) {
 
         return;
 
@@ -822,9 +915,8 @@ function handleKeyDown(event) {
 }
 
 
-
 /* =========================================================
-   NORMALIZE
+   NORMALIZE KEY
 ========================================================= */
 
 function normalizeKey(value) {
@@ -845,9 +937,8 @@ function normalizeKey(value) {
 }
 
 
-
 /* =========================================================
-   TEAM URL
+   TEAM FROM URL
 ========================================================= */
 
 function readTeamFromURL() {
@@ -856,7 +947,7 @@ function readTeamFromURL() {
 
         const params =
             new URLSearchParams(
-                location.search
+                window.location.search
             );
 
 
@@ -875,14 +966,18 @@ function readTeamFromURL() {
         }
 
     }
-    catch {
+    catch (error) {
+
+        console.warn(
+            "URLからチームを取得できません:",
+            error
+        );
 
         state.team = "A";
 
     }
 
 }
-
 
 
 /* =========================================================
@@ -895,6 +990,13 @@ function applyTeam() {
         `TEAM ${state.team}`;
 
 
+    /*
+     * キャラクター画像
+     *
+     * Ateam.png
+     * Bteam.png
+     * ...
+     */
     DOM.runnerImage.src =
         `img/character/${state.team}team.png`;
 
@@ -903,78 +1005,132 @@ function applyTeam() {
         `TEAM ${state.team}`;
 
 
-    DOM.teamButtons.forEach(button => {
+    /*
+     * チームボタン
+     */
+    DOM.teamButtons.forEach(
+        button => {
 
-        button.classList.toggle(
-            "active",
-            button.dataset.team === state.team
-        );
+            button.classList.toggle(
+                "active",
+                String(
+                    button.dataset.team || ""
+                ).toUpperCase() === state.team
+            );
 
-    });
+        }
+    );
 
 }
 
 
-
 /* =========================================================
-   RESET
+   RESET WHOLE GAME
 ========================================================= */
 
 function resetWholeGame() {
 
     stopTimer();
 
-    state.currentSection = 0;
 
-    state.sectionQuestions = [];
+    state.currentSection =
+        0;
 
-    state.currentQuestionIndex = 0;
 
-    state.currentAnswer = "";
+    state.sectionQuestions =
+        [];
 
-    state.currentPosition = 0;
 
-    state.score = 0;
+    state.currentQuestionIndex =
+        0;
 
-    state.miss = 0;
 
-    state.combo = 0;
+    state.currentAnswer =
+        "";
 
-    state.totalScore = 0;
 
-    state.totalMiss = 0;
+    state.currentPosition =
+        0;
 
-    state.sectionTotalChars = 0;
 
-    state.sectionCharsTyped = 0;
+    state.score =
+        0;
 
-    state.sectionStartTime = 0;
 
-    state.sectionElapsed = 0;
+    state.miss =
+        0;
 
-    state.sectionTimes = [];
 
-    state.sectionActive = false;
+    state.combo =
+        0;
 
-    state.gameStarted = false;
 
-    state.sectionFinished = false;
+    state.totalScore =
+        0;
 
-    state.titleScreen = true;
 
-    state.dataReady = false;
+    state.totalMiss =
+        0;
 
-    state.countdownRunning = false;
 
-    state.processingAnswer = false;
+    state.sectionTotalChars =
+        0;
 
-    state.timeExpired = false;
 
-    state.savedQuestionIndex = 0;
+    state.sectionCharsTyped =
+        0;
 
-    state.savedInputPosition = 0;
 
-    state.finalFinished = false;
+    state.sectionStartTime =
+        0;
+
+
+    state.sectionElapsed =
+        0;
+
+
+    state.sectionTimes =
+        [];
+
+
+    state.sectionActive =
+        false;
+
+
+    state.gameStarted =
+        false;
+
+
+    state.sectionFinished =
+        false;
+
+
+    state.titleScreen =
+        true;
+
+
+    state.countdownRunning =
+        false;
+
+
+    state.processingAnswer =
+        false;
+
+
+    state.timeExpired =
+        false;
+
+
+    state.finalFinished =
+        false;
+
+
+    state.savedQuestionIndex =
+        0;
+
+
+    state.savedInputPosition =
+        0;
 
 
     hideAllOverlays();
@@ -993,21 +1149,9 @@ function resetWholeGame() {
 
     resetRunner();
 
+    resetQuestionUI();
 
-    DOM.titleSection.textContent =
-        "第1区スタート";
-
-
-    DOM.titlePressEnter.textContent =
-        "LOADING...";
-
-
-    DOM.questionText.textContent =
-        "LOADING...";
-
-
-    DOM.romajiProgress.textContent =
-        "CSV DATA LOADING...";
+    resetTimer();
 
 
     focusInput();
@@ -1015,9 +1159,52 @@ function resetWholeGame() {
 }
 
 
+/* =========================================================
+   RESET TIMER
+========================================================= */
+
+function resetTimer() {
+
+    DOM.timer.textContent =
+        "00:00.000";
+
+}
+
 
 /* =========================================================
-   LOAD ALL CSV
+   RESET QUESTION UI
+========================================================= */
+
+function resetQuestionUI() {
+
+    DOM.questionNumber.textContent =
+        "0 / 0";
+
+
+    DOM.questionGenre.textContent =
+        "---";
+
+
+    DOM.questionText.textContent =
+        "LOADING...";
+
+
+    DOM.romajiProgress.textContent =
+        "";
+
+
+    DOM.nextKey.textContent =
+        "—";
+
+
+    DOM.nextKeyCombo.textContent =
+        "—";
+
+}
+
+
+/* =========================================================
+   LOAD ALL SECTIONS
 ========================================================= */
 
 async function loadAllSections() {
@@ -1037,6 +1224,11 @@ async function loadAllSections() {
                 SECTION_FILES[index];
 
 
+            console.log(
+                `[KIR CSV] loading: ${file}`
+            );
+
+
             const response =
                 await fetch(
                     `${file}?v=${Date.now()}`
@@ -1046,8 +1238,9 @@ async function loadAllSections() {
             if (!response.ok) {
 
                 throw new Error(
-                    `CSV読み込み失敗: ${file}\n` +
-                    `HTTP ${response.status}`
+                    `CSV読み込み失敗\n\n` +
+                    `ファイル: ${file}\n` +
+                    `HTTP: ${response.status}`
                 );
 
             }
@@ -1066,7 +1259,8 @@ async function loadAllSections() {
             ) {
 
                 throw new Error(
-                    `${file} に有効な問題がありません。`
+                    `${file}\n\n` +
+                    "有効な問題がありません。"
                 );
 
             }
@@ -1076,6 +1270,11 @@ async function loadAllSections() {
                 questions
             );
 
+
+            console.log(
+                `[KIR CSV] ${file}: ${questions.length}問`
+            );
+
         }
 
 
@@ -1083,17 +1282,20 @@ async function loadAllSections() {
             loadedSections;
 
 
-        state.dataReady = true;
+        state.dataReady =
+            true;
 
 
+        /*
+         * 第1区を準備
+         */
         prepareSection(0);
 
 
         /*
-         * 最初の区間タイトル
+         * タイトル表示
          */
         showSectionTitle();
-
 
     }
     catch (error) {
@@ -1111,14 +1313,43 @@ async function loadAllSections() {
 }
 
 
-
 /* =========================================================
    CSV PARSER
 ========================================================= */
 
 function parseCSV(text) {
 
+    /*
+     * BOM除去
+     */
+    text =
+        String(text || "")
+            .replace(
+                /^\uFEFF/,
+                ""
+            );
+
+
+    /*
+     * 改行コード統一
+     */
+    text =
+        text
+            .replace(
+                /\r\n/g,
+                "\n"
+            )
+            .replace(
+                /\r/g,
+                "\n"
+            );
+
+
+    /*
+     * CSV行
+     */
     const rows = [];
+
 
     let row = [];
 
@@ -1128,13 +1359,8 @@ function parseCSV(text) {
 
 
     /*
-     * BOM除去
+     * CSV解析
      */
-    text =
-        String(text || "")
-            .replace(/^\uFEFF/, "");
-
-
     for (
         let i = 0;
         i < text.length;
@@ -1144,10 +1370,16 @@ function parseCSV(text) {
         const char =
             text[i];
 
+
         const next =
             text[i + 1];
 
 
+        /*
+         * エスケープされた "
+         *
+         * ""
+         */
         if (
             char === '"' &&
             inQuotes &&
@@ -1163,7 +1395,12 @@ function parseCSV(text) {
         }
 
 
-        if (char === '"') {
+        /*
+         * クォート開始 / 終了
+         */
+        if (
+            char === '"'
+        ) {
 
             inQuotes =
                 !inQuotes;
@@ -1173,6 +1410,9 @@ function parseCSV(text) {
         }
 
 
+        /*
+         * カンマ
+         */
         if (
             char === "," &&
             !inQuotes
@@ -1187,29 +1427,22 @@ function parseCSV(text) {
         }
 
 
+        /*
+         * 改行
+         */
         if (
-            (
-                char === "\n" ||
-                char === "\r"
-            ) &&
+            char === "\n" &&
             !inQuotes
         ) {
-
-            if (
-                char === "\r" &&
-                next === "\n"
-            ) {
-
-                i++;
-
-            }
-
 
             row.push(cell);
 
             cell = "";
 
 
+            /*
+             * 完全空行は除外
+             */
             if (
                 row.some(
                     value =>
@@ -1234,70 +1467,154 @@ function parseCSV(text) {
     }
 
 
+    /*
+     * 最後のセル
+     */
+    row.push(cell);
+
+
+    /*
+     * 最終行
+     */
     if (
-        cell !== "" ||
-        row.length > 0
+        row.some(
+            value =>
+                String(value).trim() !== ""
+        )
     ) {
 
-        row.push(cell);
-
-        if (
-            row.some(
-                value =>
-                    String(value).trim() !== ""
-            )
-        ) {
-
-            rows.push(row);
-
-        }
+        rows.push(row);
 
     }
 
 
-    if (rows.length < 2) {
+    /*
+     * データがない
+     */
+    if (
+        rows.length < 2
+    ) {
 
-        return [];
+        throw new Error(
+            "CSVにデータがありません。"
+        );
 
     }
 
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
 
     const headers =
         rows[0].map(
-            value =>
-                String(value)
+            value => {
+
+                return String(value)
+                    .replace(
+                        /^\uFEFF/,
+                        ""
+                    )
                     .trim()
-                    .toLowerCase()
+                    .toLowerCase();
+
+            }
+        );
+
+
+    console.log(
+        "[KIR CSV HEADER]",
+        headers
+    );
+
+
+    /*
+     * 必須ヘッダー
+     */
+    const requiredHeaders = [
+
+        "question_no",
+        "section",
+        "genre",
+        "display",
+        "answer"
+
+    ];
+
+
+    /*
+     * 足りないヘッダー
+     */
+    const missingHeaders =
+        requiredHeaders.filter(
+            header =>
+                !headers.includes(header)
+        );
+
+
+    if (
+        missingHeaders.length > 0
+    ) {
+
+        throw new Error(
+
+            "CSVのヘッダーが新仕様ではありません。\n\n" +
+
+            "必要:\n" +
+
+            "question_no, section, genre, display, answer\n\n" +
+
+            "不足:\n" +
+
+            missingHeaders.join(", ") +
+
+            "\n\n" +
+
+            "実際:\n" +
+
+            headers.join(", ")
+
+        );
+
+    }
+
+
+    /*
+     * 列番号
+     */
+    const questionNoIndex =
+        headers.indexOf(
+            "question_no"
+        );
+
+
+    const sectionIndex =
+        headers.indexOf(
+            "section"
+        );
+
+
+    const genreIndex =
+        headers.indexOf(
+            "genre"
         );
 
 
     const displayIndex =
-        headers.indexOf("display");
-
-    const answerIndex =
-        headers.indexOf("answer");
-
-    const questionNoIndex =
-        headers.indexOf("question_no");
-
-    const sectionIndex =
-        headers.indexOf("section");
-
-    const titleIndex =
-        headers.indexOf("title");
-
-
-    if (
-        displayIndex === -1 ||
-        answerIndex === -1
-    ) {
-
-        throw new Error(
-            "CSVに display または answer 列がありません。"
+        headers.indexOf(
+            "display"
         );
 
-    }
 
+    const answerIndex =
+        headers.indexOf(
+            "answer"
+        );
+
+
+    /* =====================================================
+       DATA
+    ===================================================== */
 
     const result = [];
 
@@ -1312,37 +1629,98 @@ function parseCSV(text) {
             rows[i];
 
 
-        const rawDisplay =
-            currentRow[displayIndex] ?? "";
+        /*
+         * 空行
+         */
+        if (
+            currentRow.length === 0
+        ) {
+
+            continue;
+
+        }
 
 
-        const rawAnswer =
-            currentRow[answerIndex] ?? "";
+        /*
+         * 各列
+         */
+        const questionNo =
+            String(
+                currentRow[
+                    questionNoIndex
+                ] ?? ""
+            )
+                .trim();
+
+
+        const section =
+            String(
+                currentRow[
+                    sectionIndex
+                ] ?? ""
+            )
+                .trim();
+
+
+        const genre =
+            decodeSpecialSpaces(
+                String(
+                    currentRow[
+                        genreIndex
+                    ] ?? ""
+                )
+                    .trim()
+            );
 
 
         const display =
             decodeSpecialSpaces(
-                rawDisplay.trim()
+                String(
+                    currentRow[
+                        displayIndex
+                    ] ?? ""
+                )
+                    .trim()
             );
 
 
         const answer =
             decodeSpecialSpaces(
-                rawAnswer.trim()
-            ).toLowerCase();
+                String(
+                    currentRow[
+                        answerIndex
+                    ] ?? ""
+                )
+                    .trim()
+            )
+                .toLowerCase();
 
 
         /*
-         * 空行はスキップ
-         *
-         * ここで return して
-         * CSV全体を中断しない。
+         * 完全空行
          */
-        if (!answer) {
+        if (
+            !questionNo &&
+            !section &&
+            !genre &&
+            !display &&
+            !answer
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+         * answerなし
+         */
+        if (
+            !answer
+        ) {
 
             console.warn(
-                "answerが空のCSV行をスキップ:",
-                i + 1
+                `[KIR CSV] ${i + 1}行目: answerが空`
             );
 
             continue;
@@ -1350,34 +1728,20 @@ function parseCSV(text) {
         }
 
 
+        /*
+         * 問題追加
+         */
         result.push({
 
             questionNo:
-                questionNoIndex >= 0
-                    ? String(
-                        currentRow[
-                            questionNoIndex
-                        ] ?? i
-                    ).trim()
-                    : String(i),
+                questionNo ||
+                String(i),
 
             section:
-                sectionIndex >= 0
-                    ? String(
-                        currentRow[
-                            sectionIndex
-                        ] ?? ""
-                    ).trim()
-                    : "",
+                section,
 
-            title:
-                titleIndex >= 0
-                    ? String(
-                        currentRow[
-                            titleIndex
-                        ] ?? ""
-                    ).trim()
-                    : "",
+            genre:
+                genre,
 
             display:
                 display,
@@ -1390,10 +1754,28 @@ function parseCSV(text) {
     }
 
 
+    /*
+     * 有効問題なし
+     */
+    if (
+        result.length === 0
+    ) {
+
+        throw new Error(
+            "CSVから有効な問題を読み込めませんでした。"
+        );
+
+    }
+
+
+    console.log(
+        `[KIR CSV] ${result.length}問読み込み完了`
+    );
+
+
     return result;
 
 }
-
 
 
 /* =========================================================
@@ -1404,32 +1786,46 @@ function decodeSpecialSpaces(value) {
 
     return String(value)
 
+        /*
+         * 半角スペース
+         */
         .replace(
             /\[半角スペース\]/g,
             " "
         )
 
+        /*
+         * 全角スペース
+         */
         .replace(
             /\[全角スペース\]/g,
-            "　"
+            " "
         );
 
 }
-
 
 
 /* =========================================================
    PREPARE SECTION
 ========================================================= */
 
-function prepareSection(sectionIndex) {
+function prepareSection(
+    sectionIndex
+) {
 
+    /*
+     * タイマー停止
+     */
     stopTimer();
 
 
+    /*
+     * 全区間終了
+     */
     if (
         sectionIndex < 0 ||
-        sectionIndex >= state.sectionsData.length
+        sectionIndex >=
+        state.sectionsData.length
     ) {
 
         finishRace();
@@ -1439,6 +1835,9 @@ function prepareSection(sectionIndex) {
     }
 
 
+    /*
+     * 区間設定
+     */
     state.currentSection =
         sectionIndex;
 
@@ -1449,60 +1848,122 @@ function prepareSection(sectionIndex) {
         ];
 
 
-    state.currentQuestionIndex = 0;
-
-    state.currentAnswer = "";
-
-    state.currentPosition = 0;
-
-
-    state.score = 0;
-
-    state.miss = 0;
-
-    state.combo = 0;
+    /*
+     * 問題
+     */
+    state.currentQuestionIndex =
+        0;
 
 
-    state.sectionCharsTyped = 0;
+    state.currentAnswer =
+        "";
+
+
+    state.currentPosition =
+        0;
+
+
+    /*
+     * スコア
+     */
+    state.score =
+        0;
+
+
+    state.miss =
+        0;
+
+
+    state.combo =
+        0;
+
+
+    /*
+     * 文字数
+     */
+    state.sectionCharsTyped =
+        0;
+
 
     state.sectionTotalChars =
         state.sectionQuestions.reduce(
-            (total, question) =>
-                total + question.answer.length,
+            (
+                total,
+                question
+            ) => {
+
+                return total +
+                    question.answer.length;
+
+            },
             0
         );
 
 
-    state.sectionElapsed = 0;
-
-    state.sectionStartTime = 0;
-
-
-    state.sectionActive = false;
-
-    state.gameStarted = false;
-
-    state.sectionFinished = false;
-
-    state.titleScreen = true;
-
-    state.countdownRunning = false;
-
-    state.processingAnswer = false;
-
-    state.timeExpired = false;
+    /*
+     * タイマー
+     */
+    state.sectionStartTime =
+        0;
 
 
-    state.savedQuestionIndex = 0;
+    state.sectionElapsed =
+        0;
 
-    state.savedInputPosition = 0;
+
+    /*
+     * 状態
+     */
+    state.sectionActive =
+        false;
 
 
+    state.gameStarted =
+        false;
+
+
+    state.sectionFinished =
+        false;
+
+
+    state.titleScreen =
+        true;
+
+
+    state.countdownRunning =
+        false;
+
+
+    state.processingAnswer =
+        false;
+
+
+    state.timeExpired =
+        false;
+
+
+    /*
+     * 保存位置
+     */
+    state.savedQuestionIndex =
+        0;
+
+
+    state.savedInputPosition =
+        0;
+
+
+    /*
+     * 入力
+     */
     clearInput();
 
     clearPressedKeys();
 
 
+    /*
+     * UI
+     */
     updateSectionNumber();
 
     resetHUD();
@@ -1511,18 +1972,21 @@ function prepareSection(sectionIndex) {
 
     resetRunner();
 
+    resetTimer();
 
     showQuestion();
 
 
+    /*
+     * タイトル
+     */
     showSectionTitle();
 
 }
 
 
-
 /* =========================================================
-   SECTION TITLE
+   SHOW SECTION TITLE
 ========================================================= */
 
 function showSectionTitle() {
@@ -1549,15 +2013,23 @@ function showSectionTitle() {
     );
 
 
-    state.titleScreen = true;
+    DOM.resultOverlay.classList.add(
+        "hidden"
+    );
+
+
+    state.titleScreen =
+        true;
 
 
     document.body.classList.add(
         "ready"
     );
 
-}
 
+    focusInput();
+
+}
 
 
 /* =========================================================
@@ -1572,6 +2044,9 @@ function showQuestion() {
         ];
 
 
+    /*
+     * 問題終了
+     */
     if (!question) {
 
         finishSection();
@@ -1582,33 +2057,57 @@ function showQuestion() {
 
 
     /*
-     * 日本語のお題
+     * ==============================================
+     * genre
+     * ==============================================
+     */
+    DOM.questionGenre.textContent =
+        question.genre || "---";
+
+
+    /*
+     * ==============================================
+     * display
+     *
+     * 画面に表示するお題
+     * ==============================================
      */
     DOM.questionText.textContent =
         question.display;
 
 
     /*
-     * 実際の入力判定
+     * ==============================================
+     * answer
+     *
+     * 実際に入力する文字列
+     * ==============================================
      */
     state.currentAnswer =
-        question.answer.toLowerCase();
+        String(
+            question.answer || ""
+        )
+            .toLowerCase();
 
 
     /*
-     * 問題を新しく表示した時だけ
-     * 入力位置を0にする。
-     *
-     * 2:30終了時にはここを
-     * 呼ばない。
+     * 新しい問題なので
+     * 入力位置は0
      */
-    state.currentPosition = 0;
+    state.currentPosition =
+        0;
 
 
+    /*
+     * 問題番号
+     */
     DOM.questionNumber.textContent =
         `${state.currentQuestionIndex + 1} / ${state.sectionQuestions.length}`;
 
 
+    /*
+     * 表示更新
+     */
     updateRomajiProgress();
 
     updateRequiredKey();
@@ -1618,7 +2117,6 @@ function showQuestion() {
     focusInput();
 
 }
-
 
 
 /* =========================================================
@@ -1635,6 +2133,9 @@ function updateRomajiProgress() {
         state.currentPosition;
 
 
+    /*
+     * 空
+     */
     if (!answer) {
 
         DOM.romajiProgress.textContent =
@@ -1645,6 +2146,9 @@ function updateRomajiProgress() {
     }
 
 
+    /*
+     * 初期化
+     */
     DOM.romajiProgress.innerHTML =
         "";
 
@@ -1653,6 +2157,9 @@ function updateRomajiProgress() {
         document.createDocumentFragment();
 
 
+    /*
+     * 1文字ずつ表示
+     */
     for (
         let i = 0;
         i < answer.length;
@@ -1660,13 +2167,18 @@ function updateRomajiProgress() {
     ) {
 
         const span =
-            document.createElement("span");
+            document.createElement(
+                "span"
+            );
 
 
         span.textContent =
             answer[i];
 
 
+        /*
+         * 入力済み
+         */
         if (
             i < position
         ) {
@@ -1675,6 +2187,10 @@ function updateRomajiProgress() {
                 "typed";
 
         }
+
+        /*
+         * 現在位置
+         */
         else if (
             i === position
         ) {
@@ -1683,6 +2199,10 @@ function updateRomajiProgress() {
                 "current";
 
         }
+
+        /*
+         * 未入力
+         */
         else {
 
             span.className =
@@ -1705,15 +2225,30 @@ function updateRomajiProgress() {
 }
 
 
-
 /* =========================================================
    CHECK CHARACTER
 ========================================================= */
 
-function checkCharacter(input) {
+function checkCharacter(
+    input
+) {
 
+    /*
+     * 処理中
+     */
     if (
-        state.processingAnswer ||
+        state.processingAnswer
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * ゲーム状態
+     */
+    if (
         !state.gameStarted ||
         !state.sectionActive
     ) {
@@ -1723,12 +2258,18 @@ function checkCharacter(input) {
     }
 
 
+    /*
+     * 期待文字
+     */
     const expected =
         state.currentAnswer[
             state.currentPosition
         ];
 
 
+    /*
+     * 終端
+     */
     if (!expected) {
 
         return;
@@ -1736,15 +2277,20 @@ function checkCharacter(input) {
     }
 
 
+    /*
+     * 正解
+     */
     if (
         input === expected
     ) {
 
-        handleCorrect(
-            input
-        );
+        handleCorrect();
 
     }
+
+    /*
+     * MISS
+     */
     else {
 
         handleMiss();
@@ -1754,22 +2300,32 @@ function checkCharacter(input) {
 }
 
 
-
 /* =========================================================
    CORRECT
 ========================================================= */
 
-function handleCorrect(input) {
+function handleCorrect() {
 
+    /*
+     * 入力位置
+     */
     state.currentPosition++;
 
+
+    /*
+     * 入力済み文字数
+     */
     state.sectionCharsTyped++;
 
+
+    /*
+     * COMBO
+     */
     state.combo++;
 
 
     /*
-     * スコア
+     * 基本スコア
      */
     state.score += 10;
 
@@ -1790,11 +2346,17 @@ function handleCorrect(input) {
     }
 
 
+    /*
+     * GOOD
+     */
     flashEffect(
         DOM.goodEffect
     );
 
 
+    /*
+     * 10コンボごと
+     */
     if (
         state.combo > 0 &&
         state.combo % 10 === 0
@@ -1807,6 +2369,9 @@ function handleCorrect(input) {
     }
 
 
+    /*
+     * UI
+     */
     updateHUD();
 
     updateProgress();
@@ -1831,27 +2396,39 @@ function handleCorrect(input) {
 }
 
 
-
 /* =========================================================
    MISS
 ========================================================= */
 
 function handleMiss() {
 
+    /*
+     * MISS
+     */
     state.miss++;
 
-    state.combo = 0;
+
+    /*
+     * COMBOリセット
+     */
+    state.combo =
+        0;
 
 
+    /*
+     * MISS演出
+     */
     flashEffect(
         DOM.missEffect
     );
 
 
+    /*
+     * UI
+     */
     updateHUD();
 
 }
-
 
 
 /* =========================================================
@@ -1860,6 +2437,9 @@ function handleMiss() {
 
 async function completeQuestion() {
 
+    /*
+     * 二重実行防止
+     */
     if (
         state.processingAnswer
     ) {
@@ -1869,31 +2449,38 @@ async function completeQuestion() {
     }
 
 
-    state.processingAnswer = true;
+    state.processingAnswer =
+        true;
 
 
+    /*
+     * 最終問題か
+     */
     const isLastQuestion =
         state.currentQuestionIndex >=
         state.sectionQuestions.length - 1;
 
 
+    /*
+     * 少しだけ演出
+     */
     await sleep(
         NEXT_QUESTION_DELAY
     );
 
 
     /*
-     * 2:30がこの処理中に来ていた場合
+     * この間に2:30になった場合
      *
-     * 問題を次へ進めない。
-     * 現在の位置をそのまま保持して
-     * 区間終了へ進む。
+     * ★現在位置を変更しない
      */
     if (
         state.timeExpired
     ) {
 
-        state.processingAnswer = false;
+        state.processingAnswer =
+            false;
+
 
         finishSection();
 
@@ -1909,7 +2496,9 @@ async function completeQuestion() {
         isLastQuestion
     ) {
 
-        state.processingAnswer = false;
+        state.processingAnswer =
+            false;
+
 
         finishSection();
 
@@ -1923,20 +2512,25 @@ async function completeQuestion() {
      */
     state.currentQuestionIndex++;
 
-    state.processingAnswer = false;
+
+    state.processingAnswer =
+        false;
+
 
     showQuestion();
 
 }
 
 
-
 /* =========================================================
-   START COUNTDOWN
+   COUNTDOWN
 ========================================================= */
 
 async function startCountdown() {
 
+    /*
+     * 二重起動防止
+     */
     if (
         state.countdownRunning ||
         state.sectionActive ||
@@ -1949,6 +2543,9 @@ async function startCountdown() {
     }
 
 
+    /*
+     * データ確認
+     */
     if (
         !state.dataReady ||
         state.sectionQuestions.length === 0
@@ -1959,9 +2556,15 @@ async function startCountdown() {
     }
 
 
-    state.titleScreen = false;
+    /*
+     * タイトル終了
+     */
+    state.titleScreen =
+        false;
 
-    state.countdownRunning = true;
+
+    state.countdownRunning =
+        true;
 
 
     DOM.titleOverlay.classList.add(
@@ -1974,6 +2577,9 @@ async function startCountdown() {
     );
 
 
+    /*
+     * 3 → 2 → 1 → GO
+     */
     const sequence = [
         "3",
         "2",
@@ -1988,9 +2594,15 @@ async function startCountdown() {
         i++
     ) {
 
+        /*
+         * 中断
+         */
         if (
             state.sectionFinished
         ) {
+
+            state.countdownRunning =
+                false;
 
             return;
 
@@ -2002,7 +2614,7 @@ async function startCountdown() {
 
 
         /*
-         * アニメーションを再起動
+         * アニメーション再起動
          */
         DOM.countdown.style.animation =
             "none";
@@ -2015,6 +2627,9 @@ async function startCountdown() {
             "";
 
 
+        /*
+         * GOだけ短く
+         */
         if (
             sequence[i] === "GO!!"
         ) {
@@ -2025,7 +2640,7 @@ async function startCountdown() {
         else {
 
             await sleep(
-                COUNTDOWN_STEP
+                COUNTDOWN_TIME
             );
 
         }
@@ -2033,21 +2648,24 @@ async function startCountdown() {
     }
 
 
+    /*
+     * カウントダウン終了
+     */
     DOM.countdownOverlay.classList.add(
         "hidden"
     );
 
 
-    state.countdownRunning = false;
+    state.countdownRunning =
+        false;
 
 
     /*
-     * 第N区スタート
+     * 区間スタート
      */
     startSection();
 
 }
-
 
 
 /* =========================================================
@@ -2065,11 +2683,19 @@ function startSection() {
     }
 
 
-    state.sectionActive = true;
+    /*
+     * 状態
+     */
+    state.sectionActive =
+        true;
 
-    state.gameStarted = true;
 
-    state.timeExpired = false;
+    state.gameStarted =
+        true;
+
+
+    state.timeExpired =
+        false;
 
 
     document.body.classList.remove(
@@ -2077,20 +2703,29 @@ function startSection() {
     );
 
 
+    /*
+     * 開始時刻
+     */
     state.sectionStartTime =
         performance.now();
 
 
+    /*
+     * タイマー
+     */
     startTimer();
 
+
+    /*
+     * 入力フォーカス
+     */
     focusInput();
 
 }
 
 
-
 /* =========================================================
-   SECTION TIMER
+   START TIMER
 ========================================================= */
 
 function startTimer() {
@@ -2100,6 +2735,10 @@ function startTimer() {
 
     state.sectionStartTime =
         performance.now();
+
+
+    state.sectionElapsed =
+        0;
 
 
     updateTimer();
@@ -2114,13 +2753,15 @@ function startTimer() {
 }
 
 
-
 /* =========================================================
    UPDATE TIMER
 ========================================================= */
 
 function updateTimer() {
 
+    /*
+     * 非アクティブ
+     */
     if (
         !state.sectionActive ||
         !state.sectionStartTime
@@ -2131,6 +2772,9 @@ function updateTimer() {
     }
 
 
+    /*
+     * 経過時間
+     */
     const elapsed =
         performance.now() -
         state.sectionStartTime;
@@ -2141,7 +2785,7 @@ function updateTimer() {
 
 
     /*
-     * 表示
+     * 画面表示
      */
     DOM.timer.textContent =
         formatTime(
@@ -2150,10 +2794,10 @@ function updateTimer() {
 
 
     /*
-     * 2:30
+     * 2分30秒
      */
     if (
-        elapsed >= PLAYER_TIME &&
+        elapsed >= SECTION_TIME &&
         !state.timeExpired
     ) {
 
@@ -2164,13 +2808,15 @@ function updateTimer() {
 }
 
 
-
 /* =========================================================
    TIME EXPIRED
 ========================================================= */
 
 function handleTimeExpired() {
 
+    /*
+     * 二重実行防止
+     */
     if (
         !state.sectionActive ||
         state.timeExpired
@@ -2182,11 +2828,18 @@ function handleTimeExpired() {
 
 
     /*
-     * ここが重要。
+     * ==============================================
+     * ★重要
      *
-     * 現在問題番号と現在入力位置を
-     * その瞬間のまま保存する。
+     * 2:30になった瞬間の位置を保存
+     *
+     * currentQuestionIndex
+     * currentPosition
+     *
+     * をそのまま保存する。
+     * ==============================================
      */
+
     state.savedQuestionIndex =
         state.currentQuestionIndex;
 
@@ -2195,23 +2848,37 @@ function handleTimeExpired() {
         state.currentPosition;
 
 
-    state.timeExpired = true;
+    /*
+     * 時間切れ
+     */
+    state.timeExpired =
+        true;
 
 
     /*
      * 入力停止
      */
-    state.gameStarted = false;
+    state.gameStarted =
+        false;
 
 
+    /*
+     * 入力欄クリア
+     */
     clearInput();
 
+
+    /*
+     * キー発光解除
+     */
     clearPressedKeys();
 
 
     /*
-     * 問題処理中でも、
-     * 現在位置を変更しない。
+     * 問題完了処理中なら
+     *
+     * completeQuestion() 側で
+     * finishSection() する。
      */
     if (
         state.processingAnswer
@@ -2223,12 +2890,11 @@ function handleTimeExpired() {
 
 
     /*
-     * 即座に区間終了
+     * 即時区間終了
      */
     finishSection();
 
 }
-
 
 
 /* =========================================================
@@ -2245,12 +2911,13 @@ function stopTimer() {
             state.timerInterval
         );
 
-        state.timerInterval = null;
+
+        state.timerInterval =
+            null;
 
     }
 
 }
-
 
 
 /* =========================================================
@@ -2259,6 +2926,9 @@ function stopTimer() {
 
 function finishSection() {
 
+    /*
+     * 二重実行防止
+     */
     if (
         state.sectionFinished
     ) {
@@ -2268,11 +2938,14 @@ function finishSection() {
     }
 
 
+    /*
+     * タイマー停止
+     */
     stopTimer();
 
 
     /*
-     * 現在時刻を確定
+     * 最終経過時間
      */
     if (
         state.sectionStartTime
@@ -2282,32 +2955,58 @@ function finishSection() {
             Math.min(
                 performance.now() -
                 state.sectionStartTime,
-                PLAYER_TIME
+                SECTION_TIME
             );
 
     }
 
 
-    state.sectionActive = false;
-
-    state.gameStarted = false;
-
-    state.countdownRunning = false;
-
-    state.sectionFinished = true;
-
-    state.titleScreen = false;
+    /*
+     * 状態停止
+     */
+    state.sectionActive =
+        false;
 
 
+    state.gameStarted =
+        false;
+
+
+    state.countdownRunning =
+        false;
+
+
+    state.sectionFinished =
+        true;
+
+
+    state.titleScreen =
+        false;
+
+
+    /*
+     * 入力停止
+     */
     clearInput();
 
     clearPressedKeys();
 
 
     /*
-     * 2:30で終了した場合は、
-     * 保存した位置をstateにも残す。
+     * ==============================================
+     * 2:30終了の場合
+     *
+     * 保存していた
+     *
+     * 問題番号
+     * 入力位置
+     *
+     * に戻す。
+     *
+     * ★「次の問題」へ勝手に進めない。
+     * ==============================================
      */
+
     if (
         state.timeExpired
     ) {
@@ -2315,14 +3014,11 @@ function finishSection() {
         state.currentQuestionIndex =
             state.savedQuestionIndex;
 
+
         state.currentPosition =
             state.savedInputPosition;
 
 
-        /*
-         * 画面上も「2:30で止まった位置」を
-         * そのまま維持する。
-         */
         updateRomajiProgress();
 
         updateRequiredKey();
@@ -2330,6 +3026,9 @@ function finishSection() {
     }
 
 
+    /*
+     * 区間結果
+     */
     DOM.resultSection.textContent =
         String(
             state.currentSection + 1
@@ -2354,6 +3053,9 @@ function finishSection() {
         );
 
 
+    /*
+     * オーバーレイ
+     */
     DOM.titleOverlay.classList.add(
         "hidden"
     );
@@ -2369,18 +3071,23 @@ function finishSection() {
     );
 
 
+    /*
+     * HUD
+     */
     updateHUD();
 
 }
 
 
-
 /* =========================================================
-   NEXT SECTION
+   RESULT → NEXT SECTION
 ========================================================= */
 
 function handleResultNext() {
 
+    /*
+     * 区間終了していなければ無視
+     */
     if (
         !state.sectionFinished
     ) {
@@ -2391,7 +3098,7 @@ function handleResultNext() {
 
 
     /*
-     * 現在区間の結果を合計へ加算
+     * 現在区間を合計
      */
     state.totalScore +=
         state.score;
@@ -2407,6 +3114,9 @@ function handleResultNext() {
         state.sectionElapsed;
 
 
+    /*
+     * 結果画面を閉じる
+     */
     DOM.resultOverlay.classList.add(
         "hidden"
     );
@@ -2419,6 +3129,9 @@ function handleResultNext() {
         state.currentSection + 1;
 
 
+    /*
+     * 全区間終了
+     */
     if (
         nextSection >=
         state.sectionsData.length
@@ -2432,7 +3145,7 @@ function handleResultNext() {
 
 
     /*
-     * 第N+1区
+     * 少し待って次区間
      */
     setTimeout(
         () => {
@@ -2448,47 +3161,71 @@ function handleResultNext() {
 }
 
 
-
 /* =========================================================
-   FINAL
+   FINISH RACE
 ========================================================= */
 
 function finishRace() {
 
+    /*
+     * タイマー停止
+     */
     stopTimer();
 
 
-    state.sectionActive = false;
-
-    state.gameStarted = false;
-
-    state.sectionFinished = false;
-
-    state.titleScreen = false;
-
-    state.finalFinished = true;
+    /*
+     * 状態
+     */
+    state.sectionActive =
+        false;
 
 
+    state.gameStarted =
+        false;
+
+
+    state.sectionFinished =
+        false;
+
+
+    state.titleScreen =
+        false;
+
+
+    state.finalFinished =
+        true;
+
+
+    /*
+     * 入力
+     */
     clearInput();
 
     clearPressedKeys();
 
 
     /*
-     * 全区間タイム
+     * 合計タイム
      */
     const totalTime =
         state.sectionTimes.reduce(
-            (total, time) =>
-                total + (
-                    Number(time) || 0
-                ),
+            (
+                total,
+                time
+            ) => {
+
+                return total +
+                    (
+                        Number(time) || 0
+                    );
+
+            },
             0
         );
 
 
     /*
-     * 最終表示
+     * 最終結果
      */
     DOM.finalTime.textContent =
         formatTime(
@@ -2508,6 +3245,9 @@ function finishRace() {
         );
 
 
+    /*
+     * 表示
+     */
     DOM.finalOverlay.classList.remove(
         "hidden"
     );
@@ -2515,9 +3255,8 @@ function finishRace() {
 }
 
 
-
 /* =========================================================
-   HUD
+   HUD RESET
 ========================================================= */
 
 function resetHUD() {
@@ -2525,20 +3264,28 @@ function resetHUD() {
     DOM.score.textContent =
         "0";
 
+
     DOM.miss.textContent =
         "0";
+
 
     DOM.combo.textContent =
         "0";
 
+
     DOM.comboSideValue.textContent =
         "0";
+
 
     DOM.accuracy.textContent =
         "100.0%";
 
 }
 
+
+/* =========================================================
+   HUD UPDATE
+========================================================= */
 
 function updateHUD() {
 
@@ -2566,6 +3313,12 @@ function updateHUD() {
         );
 
 
+    /*
+     * 正確率
+     *
+     * 正解文字数 /
+     * (正解文字数 + MISS)
+     */
     const attempts =
         state.sectionCharsTyped +
         state.miss;
@@ -2573,10 +3326,12 @@ function updateHUD() {
 
     const accuracy =
         attempts > 0
+
             ? (
                 state.sectionCharsTyped /
                 attempts
             ) * 100
+
             : 100;
 
 
@@ -2586,9 +3341,8 @@ function updateHUD() {
 }
 
 
-
 /* =========================================================
-   PROGRESS
+   PROGRESS RESET
 ========================================================= */
 
 function resetProgress() {
@@ -2613,6 +3367,10 @@ function resetProgress() {
 }
 
 
+/* =========================================================
+   PROGRESS UPDATE
+========================================================= */
+
 function updateProgress() {
 
     const total =
@@ -2625,6 +3383,7 @@ function updateProgress() {
 
     const percent =
         total > 0
+
             ? Math.min(
                 100,
                 (
@@ -2632,9 +3391,13 @@ function updateProgress() {
                     total
                 ) * 100
             )
+
             : 0;
 
 
+    /*
+     * 数値
+     */
     DOM.progressCurrent.textContent =
         String(
             current
@@ -2647,23 +3410,28 @@ function updateProgress() {
         );
 
 
+    /*
+     * %
+     */
     DOM.progressPercent.textContent =
         `${percent.toFixed(0)}%`;
 
 
+    /*
+     * バー
+     */
     DOM.progressFill.style.width =
         `${percent}%`;
 
 
     /*
-     * キャラクター位置
+     * ランナー
      */
     const runnerPercent =
         Math.min(
             92,
             2 + (
-                percent *
-                .9
+                percent * 0.9
             )
         );
 
@@ -2672,7 +3440,6 @@ function updateProgress() {
         `${runnerPercent}%`;
 
 }
-
 
 
 /* =========================================================
@@ -2689,9 +3456,8 @@ function updateSectionNumber() {
 }
 
 
-
 /* =========================================================
-   RUNNER
+   RUNNER RESET
 ========================================================= */
 
 function resetRunner() {
@@ -2702,75 +3468,271 @@ function resetRunner() {
 }
 
 
-
 /* =========================================================
-   REQUIRED KEY
+   NEXT KEY
 ========================================================= */
 
 function updateRequiredKey() {
 
+    /*
+     * 旧キーボードの
+     * current状態を全部解除
+     */
     clearCurrentKeys();
 
 
+    /*
+     * 入力完了
+     */
     if (
         !state.currentAnswer ||
         state.currentPosition >=
         state.currentAnswer.length
     ) {
 
+        DOM.nextKey.textContent =
+            "✓";
+
+
+        DOM.nextKeyCombo.textContent =
+            "COMPLETE";
+
+
         return;
 
     }
 
 
+    /*
+     * 次の1文字
+     */
     const required =
         state.currentAnswer[
             state.currentPosition
         ];
 
 
-    DOM.keys.forEach(key => {
+    /*
+     * NEXT KEY
+     */
+    DOM.nextKey.textContent =
+        required;
 
-        if (
-            key.dataset.key ===
+
+    /*
+     * キー操作
+     */
+    DOM.nextKeyCombo.textContent =
+        getKeyGuide(
             required
-        ) {
+        );
 
-            key.classList.add(
-                "current"
-            );
+
+    /*
+     * 旧仮想キーボード
+     */
+    DOM.keys.forEach(
+        key => {
+
+            if (
+                String(
+                    key.dataset.key || ""
+                ).toLowerCase() ===
+                required
+            ) {
+
+                key.classList.add(
+                    "current"
+                );
+
+            }
 
         }
-
-    });
+    );
 
 }
 
+
+/* =========================================================
+   KEY GUIDE
+========================================================= */
+
+function getKeyGuide(
+    character
+) {
+
+    const map = {
+
+        " ":
+            "SPACE",
+
+        "!":
+            "Shift + 1",
+
+        '"':
+            "Shift + 2",
+
+        "#":
+            "Shift + 3",
+
+        "$":
+            "Shift + 4",
+
+        "%":
+            "Shift + 5",
+
+        "&":
+            "Shift + 6",
+
+        "'":
+            "Shift + 7",
+
+        "(":
+            "Shift + 8",
+
+        ")":
+            "Shift + 9",
+
+        "=":
+            "Shift + -",
+
+        "~":
+            "Shift + ^",
+
+        "|":
+            "Shift + \\",
+
+        "`":
+            "Shift + @",
+
+        "{":
+            "Shift + [",
+
+        "}":
+            "Shift + ]",
+
+        "+":
+            "Shift + ;",
+
+        "*":
+            "Shift + :",
+
+        "<":
+            "Shift + ,",
+
+        ">":
+            "Shift + .",
+
+        "?":
+            "Shift + /",
+
+        "_":
+            "Shift + \\"
+
+    };
+
+
+    /*
+     * SPACE
+     */
+    if (
+        character === " "
+    ) {
+
+        return "SPACE";
+
+    }
+
+
+    /*
+     * マップに存在
+     */
+    if (
+        Object.prototype.hasOwnProperty.call(
+            map,
+            character
+        )
+    ) {
+
+        return map[character];
+
+    }
+
+
+    /*
+     * アルファベット
+     */
+    if (
+        /^[a-z]$/i.test(
+            character
+        )
+    ) {
+
+        return character.toUpperCase();
+
+    }
+
+
+    /*
+     * 数字
+     */
+    if (
+        /^[0-9]$/.test(
+            character
+        )
+    ) {
+
+        return character;
+
+    }
+
+
+    /*
+     * その他
+     */
+    return character;
+
+}
 
 
 /* =========================================================
    KEY EFFECT
 ========================================================= */
 
-function flashPressedKey(keyValue) {
+function flashPressedKey(
+    keyValue
+) {
 
-    let target = null;
+    let target =
+        null;
 
 
-    DOM.keys.forEach(key => {
+    DOM.keys.forEach(
+        key => {
 
-        if (
-            key.dataset.key ===
-            keyValue
-        ) {
+            const datasetKey =
+                String(
+                    key.dataset.key || ""
+                ).toLowerCase();
 
-            target = key;
+
+            if (
+                datasetKey ===
+                keyValue
+            ) {
+
+                target =
+                    key;
+
+            }
 
         }
+    );
 
-    });
 
-
+    /*
+     * 対応キーなし
+     */
     if (!target) {
 
         return;
@@ -2797,52 +3759,84 @@ function flashPressedKey(keyValue) {
 }
 
 
+/* =========================================================
+   CLEAR CURRENT KEY
+========================================================= */
+
 function clearCurrentKeys() {
 
-    DOM.keys.forEach(key => {
+    DOM.keys.forEach(
+        key => {
 
-        key.classList.remove(
-            "current"
-        );
+            key.classList.remove(
+                "current"
+            );
 
-    });
+        }
+    );
 
 }
 
+
+/* =========================================================
+   CLEAR PRESSED KEY
+========================================================= */
 
 function clearPressedKeys() {
 
-    DOM.keys.forEach(key => {
+    DOM.keys.forEach(
+        key => {
 
-        key.classList.remove(
-            "pressed"
-        );
+            key.classList.remove(
+                "pressed"
+            );
 
-    });
+        }
+    );
 
 }
-
 
 
 /* =========================================================
    EFFECT
 ========================================================= */
 
-function flashEffect(element) {
+function flashEffect(
+    element
+) {
 
+    if (!element) {
+
+        return;
+
+    }
+
+
+    /*
+     * 一旦解除
+     */
     element.classList.remove(
         "show"
     );
 
 
+    /*
+     * 再描画
+     */
     void element.offsetWidth;
 
 
+    /*
+     * 表示
+     */
     element.classList.add(
         "show"
     );
 
 
+    /*
+     * 消去
+     */
     setTimeout(
         () => {
 
@@ -2857,18 +3851,27 @@ function flashEffect(element) {
 }
 
 
-
 /* =========================================================
    INPUT
 ========================================================= */
 
 function clearInput() {
 
-    DOM.typingInput.value =
-        "";
+    if (
+        DOM.typingInput
+    ) {
+
+        DOM.typingInput.value =
+            "";
+
+    }
 
 }
 
+
+/* =========================================================
+   FOCUS INPUT
+========================================================= */
 
 function focusInput() {
 
@@ -2881,10 +3884,20 @@ function focusInput() {
     }
 
 
+    if (
+        !DOM.typingInput
+    ) {
+
+        return;
+
+    }
+
+
     try {
 
         DOM.typingInput.focus({
-            preventScroll: true
+            preventScroll:
+                true
         });
 
     }
@@ -2897,9 +3910,8 @@ function focusInput() {
 }
 
 
-
 /* =========================================================
-   OVERLAY
+   HIDE OVERLAYS
 ========================================================= */
 
 function hideAllOverlays() {
@@ -2908,17 +3920,21 @@ function hideAllOverlays() {
         "hidden"
     );
 
+
     DOM.countdownOverlay.classList.add(
         "hidden"
     );
+
 
     DOM.errorOverlay.classList.add(
         "hidden"
     );
 
+
     DOM.resultOverlay.classList.add(
         "hidden"
     );
+
 
     DOM.finalOverlay.classList.add(
         "hidden"
@@ -2927,12 +3943,13 @@ function hideAllOverlays() {
 }
 
 
-
 /* =========================================================
    ERROR
 ========================================================= */
 
-function showError(message) {
+function showError(
+    message
+) {
 
     console.error(
         "[KIR ERROR]",
@@ -2940,10 +3957,6 @@ function showError(message) {
     );
 
 
-    /*
-     * DOM初期化前でもエラーで
-     * 二次エラーを起こさない。
-     */
     const errorMessage =
         document.getElementById(
             "error-message"
@@ -2956,7 +3969,9 @@ function showError(message) {
         );
 
 
-    if (errorMessage) {
+    if (
+        errorMessage
+    ) {
 
         errorMessage.textContent =
             String(message);
@@ -2964,7 +3979,9 @@ function showError(message) {
     }
 
 
-    if (errorOverlay) {
+    if (
+        errorOverlay
+    ) {
 
         errorOverlay.classList.remove(
             "hidden"
@@ -2975,12 +3992,13 @@ function showError(message) {
 }
 
 
-
 /* =========================================================
    FORMAT TIME
 ========================================================= */
 
-function formatTime(milliseconds) {
+function formatTime(
+    milliseconds
+) {
 
     const safe =
         Math.max(
@@ -2997,7 +4015,9 @@ function formatTime(milliseconds) {
 
     const seconds =
         Math.floor(
-            (safe % 60000) / 1000
+            (
+                safe % 60000
+            ) / 1000
         );
 
 
@@ -3010,29 +4030,43 @@ function formatTime(milliseconds) {
     return (
 
         String(minutes)
-            .padStart(2, "0")
+            .padStart(
+                2,
+                "0"
+            )
 
-        + ":" +
+        +
+
+        ":" +
 
         String(seconds)
-            .padStart(2, "0")
+            .padStart(
+                2,
+                "0"
+            )
 
-        + "." +
+        +
+
+        "." +
 
         String(millis)
-            .padStart(3, "0")
+            .padStart(
+                3,
+                "0"
+            )
 
     );
 
 }
 
 
-
 /* =========================================================
    SLEEP
 ========================================================= */
 
-function sleep(milliseconds) {
+function sleep(
+    milliseconds
+) {
 
     return new Promise(
         resolve =>
@@ -3045,21 +4079,35 @@ function sleep(milliseconds) {
 }
 
 
-
 /* =========================================================
-   DEBUG
+   DEBUG API
 ========================================================= */
 
 window.KIR_GAME = {
 
-    state,
+    /*
+     * 現在状態
+     */
+    getState() {
 
+        return state;
+
+    },
+
+
+    /*
+     * リロード
+     */
     restart() {
 
         location.reload();
 
     },
 
+
+    /*
+     * スタート
+     */
     start() {
 
         if (
@@ -3073,6 +4121,10 @@ window.KIR_GAME = {
 
     },
 
+
+    /*
+     * 現在区間を強制終了
+     */
     finishSection() {
 
         finishSection();
@@ -3080,3 +4132,8 @@ window.KIR_GAME = {
     }
 
 };
+
+
+/* =========================================================
+   END
+========================================================= */
