@@ -170,6 +170,21 @@ input {
 .main-title span {
     color: var(--yellow);
 }
+/* TEAM NAME COLORS */
+.team-A { color: #00aaff; }   /* blue */
+.team-B { color: #ff3333; }   /* red */
+.team-C { color: #33cc33; }   /* green */
+.team-D { color: #ffdd00; }   /* yellow */
+.team-E { color: #aa33ff; }   /* purple */
+.team-F { color: #33ddff; }   /* skyblue */
+
+/* TITLE COLORS */
+.title-A { color: #00aaff; }
+.title-B { color: #ff3333; }
+.title-C { color: #33cc33; }
+.title-D { color: #ffdd00; }
+.title-E { color: #aa33ff; }
+.title-F { color: #33ddff; }
 
 .top-copy {
     display: grid;

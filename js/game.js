@@ -50,7 +50,8 @@ const SECTION_FILES = [
     "data/section2.csv",
     "data/section3.csv",
     "data/section4.csv",
-    "data/section5.csv"
+    "data/section5.csv",
+    "data/section6.csv"    
 ];
 
 
@@ -980,49 +981,71 @@ function readTeamFromURL() {
 }
 
 
-/* =========================================================
-   APPLY TEAM
-========================================================= */
-
 function applyTeam() {
 
-    DOM.teamName.textContent =
-        `TEAM ${state.team}`;
+    // 表示名（色名）に変換するテーブル
+    const TEAM_DISPLAY_NAME = {
+        A: "TEAM BLUE",
+        B: "TEAM RED",
+        C: "TEAM GREEN",
+        D: "TEAM YELLOW",
+        E: "TEAM PURPLE",
+        F: "TEAM SKYBLUE"
+    };
 
+    // UIカラー（--cyan をチーム色に変更）
+    const TEAM_UI_COLOR = {
+        A: "#00aaff",   // BLUE
+        B: "#ff3333",   // RED
+        C: "#33cc33",   // GREEN
+        D: "#ffdd00",   // YELLOW
+        E: "#aa33ff",   // PURPLE
+        F: "#33ddff"    // SKYBLUE
+    };
 
-    /*
-     * キャラクター画像
-     *
-     * Ateam.png
-     * Bteam.png
-     * ...
-     */
-    DOM.runnerImage.src =
-        `img/character/${state.team}team.png`;
-
-
-    DOM.runnerImage.alt =
-        `TEAM ${state.team}`;
-
-
-    /*
-     * チームボタン
-     */
-    DOM.teamButtons.forEach(
-        button => {
-
-            button.classList.toggle(
-                "active",
-                String(
-                    button.dataset.team || ""
-                ).toUpperCase() === state.team
-            );
-
-        }
+    // CSS変数を書き換え（UI全体の光・枠線・HUDが変わる）
+    document.documentElement.style.setProperty(
+        "--cyan",
+        TEAM_UI_COLOR[state.team]
     );
 
-}
+    // TEAM名表示（色名）
+    DOM.teamName.textContent = TEAM_DISPLAY_NAME[state.team];
 
+    // TEAM名の色クラス切り替え
+    DOM.teamName.classList.remove(
+        "team-A", "team-B", "team-C",
+        "team-D", "team-E", "team-F"
+    );
+    DOM.teamName.classList.add(`team-${state.team}`);
+
+    // タイトルの色クラス切り替え + 文言変更
+    const mainTitle = document.querySelector(".main-title");
+    if (mainTitle) {
+
+        mainTitle.classList.remove(
+            "title-A", "title-B", "title-C",
+            "title-D", "title-E", "title-F"
+        );
+        mainTitle.classList.add(`title-${state.team}`);
+
+        // タイトル文言を色名に変更
+        mainTitle.innerHTML =
+            `めちゃむずキーボード早打ち<span>駅伝</span> - ${TEAM_DISPLAY_NAME[state.team]}`;
+    }
+
+    // runner画像切り替え
+    DOM.runnerImage.src = `img/character/${state.team}team.png`;
+    DOM.runnerImage.alt = TEAM_DISPLAY_NAME[state.team];
+
+    // TEAMボタンの active 切り替え
+    DOM.teamButtons.forEach(button => {
+        button.classList.toggle(
+            "active",
+            String(button.dataset.team).toUpperCase() === state.team
+        );
+    });
+}
 
 /* =========================================================
    RESET WHOLE GAME
