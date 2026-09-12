@@ -1,6 +1,7 @@
 question_no,section,title,display,answer
-1,2,日本語「Kirあるある」,現場が違うと、同じKirの社員でも「はじめまして」から始まることがある。,"genbagachigauto,onajikirnoshaindemohajimemashitekara hajimarukotogaaru."
-2,2,日本語「Kirあるある」,営業部から連絡が来ると、案件の話か、社内イベントの話かで少しドキドキする。,"eigyoubukararennrakugakuruto,ankennnohanashika,shanaieventnohanashikadesukoshidokidokisuru."
-3,2,日本語「Kirあるある」,面接の前は準備していたのに、本番になると知っている単語が急に出なくなる。,"mensetsunomaewajunbishiteitanoni,honbanninarutoshitteirutangogakyuunidenakunaru."
-4,2,日本語「Kirあるある」,現場で使うツールが全部違う。Slack、Teams、メールがいつの間にか並んでいる。,"genbadetsukautoolgazembuchigau.slack,teams,mailgaitsunomanikanarandeiru."
-5,2,日本語「Kirあるある」,案件の要件を見て「これできる人誰かいるかな」と思ったとき、意外な人の名前が上がる！,"ankennnoyoukenwomite,koredekiruhitodareka irukanatoomottatoki,igainahitononamaegaagaru!"
+1,2,日本語「Kirあるある」,現場が違うと、同じKirの社員でも「はじめまして」から始まることがある。,"genbagachigauto,onajikirnoshainndemo「hajimemashite」karahajimarukotogaaru."
+2,2,日本語「Kirあるある」,営業部から連絡が来ると、案件の話か、社内イベントの話かで少しドキドキする。,"eigyoubukararenrakugakuruto,ankennohanashika,shanaiibentnohanashikadesukoshidokidokisuru."
+3,2,日本語「Kirあるある」,面接の前は準備していたのに、本番になると知っている単語が急に出なくなる。,"mensetsunomaeha junbishiteitanoni,honbanninarutoshitteirutangogakyuunidenakunaru."
+4,2,日本語「Kirあるある」,現場で使うツールが全部違う。Slack、Teams、メールがいつの間にか並んでいる。,"genbade tsukautsu-rugazembuchigau.slack,teams,me-rugaitsunomanikanarandeiru."
+5,2,日本語「Kirあるある」,案件の要件を見て「これできる人誰かいるかな」と思ったとき、意外な人の名前が上がる！,"ankennnoyoukenwomite「koredekiruhitodareka irukana」toomottatoki,igainahitononamaegaagaru!"
+```
